@@ -142,9 +142,10 @@ with open(json_file, 'r', encoding='utf-8') as file:
 # Initialize counters
 i,j = 0,0
 
-# Initialize storage of mapped data
+# Initialize storage of description components, mapped data, and names
 descriptionParts = []
 mappedFields = {}
+personIDs = []
 descriptionEnd = None
 
 # Loop through FITS metadata keys and associated SPASE xml tags
@@ -209,6 +210,11 @@ for key, tag in displayDataMap.items():
                 descriptionEnd = value
             else:
                 KeyError(f"{key} not recognized in FITS-SPASE mapping")
+
+        elif tag == "PersonID":
+            print(f"PersonID: {value}")
+            personIDs.append(value)
+
         # Assign values of fields not mapped to Description
         else:
             mappedFields[tag] = value
@@ -220,6 +226,7 @@ for key, tag in displayDataMap.items():
 print(f"Total # of fields: {i+j}")
 print(f"Total found: {i}")
 print(f"Total not found: {j}")
+#print(personIDs)
 
 # Conjoin parts of description
 finalDescription = ". ".join(descriptionParts) + f". {descriptionEnd}."
@@ -236,8 +243,18 @@ if descElem is None:
     descElem = etree.SubElement(resourceHeader, f"{{{NAMESPACE_URI}}}Description")
 descElem.text = finalDescription
 
+# Create Contact and PersonID elements for all fields that provide one
+for personID in personIDs:
+    contactElem = resourceHeader.find('spase:Contact', namespaces=namespaces)
+    pidElem = contactElem.find('spase:PersonID', namespaces=namespaces)
+    if contactElem is None:
+        contactElem = etree.SubElement(resourceHeader, f"{{{NAMESPACE_URI}}}Contact")
+        pidElem = etree.SubElement(contactElem, f"{{{NAMESPACE_URI}}}PersonID")
+    pidElem.text = personID
+
 # Find other mapped fields, or create if needed, and insert value
 for tag, value in mappedFields.items():
+    print(f"Now inserting {tag}: {value}")
     elem = resourceHeader.find(f'spase:{tag}', namespaces=namespaces)
     if elem is None:
         elem = etree.SubElement(resourceHeader, f"{{{NAMESPACE_URI}}}{tag}")
