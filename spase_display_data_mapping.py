@@ -46,5 +46,21 @@ displayDataMap = {"OBSTITLE":"ResourceName","TITLE":"ResourceName",
                   "AUTHOR":"PersonID","ORIGIN":"PersonID",
                   "RELEASEC":"PersonID",
 
-                  "FITS":"Format"
+                  "FITS":"Format",
+
+                  "BTYPE":"MeasurmentType"
                   }
+
+# Define the namespace URI
+NAMESPACE_URI = "http://www.spase-group.org/data/schema"
+# Register the namespace with a desired prefix
+ET.register_namespace("", NAMESPACE_URI)
+
+# Parse ElementTree and extract root
+parser = etree.XMLParser()
+tree = ET.parse('spase_display_data_req.xml', parser)
+root = tree.getroot()
+
+# Iterate through root to see subfields
+for elt in root.iter(tag=etree.Element):
+    print(elt.tag)
