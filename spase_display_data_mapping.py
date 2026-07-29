@@ -22,7 +22,7 @@ import time
                              "DESCRPTN":"Description","FILTER":"Description",
                              "GRATING":"Description","HISTORY":"Description",
                              "OBJECT":"Description","OBS_DESC":"Description",
-                             "OBS_ID":"Description","OBS_MODE":"Description",
+                             "OBS_ID":"Description","OBS-MODE":"Description",
                              "TELCONFG":"Description","TEXPOSUR":"Description",
                              "TDESCn":"Description","UCD":"Description",
                              "EXPTIME":"Description","XPOSURE":"Description"}"""
@@ -31,6 +31,7 @@ import time
 #                     AccessInformation>(RepositoryID,AccessURL)
 # Dict of fields that map within DisplayData            
 displayDataMap = {"OBSTITLE":"ResourceName","TITLE":"ResourceName",
+                  
                   "RELEASE":"ReleaseDate",
 
                   "CAMERA":"Description","CAR_ROT":"Description",
@@ -40,7 +41,7 @@ displayDataMap = {"OBSTITLE":"ResourceName","TITLE":"ResourceName",
                   "DESCRPTN":"Description","FILTER":"Description",
                   "GRATING":"Description","HISTORY":"Description",
                   "OBJECT":"Description","OBS_DESC":"Description",
-                  "OBS_ID":"Description","OBS_MODE":"Description",
+                  "OBS_ID":"Description","OBS-MODE":"Description",
                   "TELCONFG":"Description","TEXPOSUR":"Description",
                   "TDESCn":"Description","UCD":"Description",
                   "EXPTIME":"Description","XPOSURE":"Description",
@@ -64,8 +65,8 @@ tree = ET.parse('spase_display_data_req.xml', parser)
 root = tree.getroot()
 
 # Iterate through root to see subfields
-for elt in root.iter(tag=etree.Element):
-    print(elt.tag)
+# for elt in root.iter(tag=etree.Element):
+    #print(elt.tag)
 
 class fits_header_to_json():
     def __init__(self,fits_url):
@@ -85,12 +86,15 @@ class fits_header_to_json():
                 all_hdu_headers.append(current_header_dict)
         print(f"Headers successfully extracted for {self.fits_url}")
 
-        """For PUNCH output data files: 
+        """
+        https://punchbowl.readthedocs.io/en/0.0.19/data/access.html
+        For PUNCH output data files: 
             -hdul[0] contains information about the compression scheme.
             -hdul[1] contains primary data array & astropy header string
             describing that data
             -hdul[2]) contains uncertainty array - corresponding on a
-            pixel-by-pixel basis with the primary data array."""
+            pixel-by-pixel basis with the primary data array.
+        """
 
         return all_hdu_headers[1]
 
@@ -125,7 +129,107 @@ class fits_header_to_json():
 
         return None
 
-# Run test on single example file
+"""# Run test on single example file
 test_file = 'https://umbra.nascom.nasa.gov/punch/3/CAM/2026/02/20/PUNCH_L3_CAM_20260220001600_v0j.fits'
 test = fits_header_to_json(test_file)
-test.write_json(headers_list=test.extract_header())
+test.write_json(headers_list=test.extract_header())"""
+
+# Open the file and parse its contents
+json_file = "local_json_output/punch_3_CAM_2026_02_20_PUNCH_L3_CAM_20260220001600_v0j.json"
+with open(json_file, 'r', encoding='utf-8') as file:
+    data = json.load(file)
+
+# Initialize counters
+i,j = 0,0
+
+# Initialize storage of mapped data
+descriptionParts = []
+mappedFields = {}
+
+# Loop through FITS metadata keys and associated SPASE xml tags
+for key, tag in displayDataMap.items():
+    if key in data:
+        i+=1
+        #print(f"{key} found!")
+        #value = str(data[key]).strip()
+        value = data[key]
+        #print(f"{value}\n")
+        if tag == "Description":
+    
+            if key ==" DESCRPTN":
+                descriptionParts.append(f"{value}")
+            elif key == "CAMERA":
+                descriptionParts.append(f"CAMERA: {value}")
+            elif key == "CAR_ROT":
+                if isinstance(value,list):
+                    # Possibly has multiple values in list?
+                    descriptionParts.append(f"Carrington rotations {min(value)} to {max(value)}")
+                else:
+                    descriptionParts.append(f"Carrington rotations {value}")
+            elif key == "CRS_DESC":
+                print("Concatenate unique values into a list")
+            elif key == "CRS_TYPE":
+                descriptionParts.append(f"SpectralRange: {value}")
+            elif key == "CTYPE1":
+                descriptionParts.append(f"CTYPE1: {value}")
+            elif key == "CTYPE2":
+                descriptionParts.append(f"CTYPE2: {value}")
+            elif key == "CUNIT1":
+                descriptionParts.append(f"CUNIT1: {value}")
+            elif key == "CUNIT2":
+                descriptionParts.append(f"CUNIT2: {value}")
+            elif key == "FILTER":
+                descriptionParts.append(f"Filter: {value}")
+            elif key == "GRATING":
+                descriptionParts.append(f"Grating: {value}")
+            elif key == "OBJECT":
+                descriptionParts.append(f"{value}")
+            elif key == "OBS_DESC":
+                descriptionParts.append(f"Observation: {value}")
+            elif key == "OBS_ID":
+                descriptionParts.append(f"Observation IDs: {value}")
+            elif key == "OBS-MODE":
+                descriptionParts.append(f"Observation modes: {value}")
+            elif key == "TDESCn":
+                print("Look for `CONTINUE` fields following these and append them.")
+            elif key == "TELCONFG":
+                descriptionParts.append(f"Configuration: {value}")
+            elif key == "TEXPOSUR":
+                descriptionParts.append(f"Single exposure time: {value}")
+            elif key == "UCD":
+                print("UCD = Unified Content DescriptorDescribes the physical" \
+                " quantity in a standard way (e.g., identifier for the concept)" \
+                "could be mapped into keyword if it had URL/identifier support")
+            elif key == "EXPTIME":
+                descriptionParts.append(f"Exposures: {np.median(value)}")
+            elif key == "XPOSURE":
+                descriptionParts.append(f"Exposures: {value}")       
+            elif key == "HISTORY":
+                descriptionParts.append(f"{value}")
+            else:
+                KeyError(f"{key} not recognized in FITS-SPASE mapping")
+        else:
+            mappedFields[tag] = value
+
+    else:
+        j+=1
+        print(f"{key} NOT found\n")
+
+# Conjoin parts of description
+finalDescription = ". ".join(descriptionParts) + "."
+
+print(finalDescription)
+
+"""# Define namespaces and find ResourceHeader in ElementTree root
+namespaces = {"spase": f"{NAMESPACE_URI}"}
+resource_header = root.find('.//spase:ResourceHeader', namespaces=namespaces)
+
+desc_elem = resource_header.find('spase:Description', namespaces=namespaces)
+if desc_elem is None:
+    # Create it if it doesn't exist
+    desc_elem = ET.SubElement(resource_header, f"{{{NAMESPACE_URI}}}Description")
+desc_elem.text = final_description
+
+# Assess what fields are present or not
+print(f"Total found: {i}")
+print(f"Total not found: {j}")"""
