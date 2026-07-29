@@ -145,19 +145,20 @@ i,j = 0,0
 # Initialize storage of mapped data
 descriptionParts = []
 mappedFields = {}
+descriptionEnd = None
 
 # Loop through FITS metadata keys and associated SPASE xml tags
 for key, tag in displayDataMap.items():
     if key in data:
         i+=1
-        #print(f"{key} found!")
-        #value = str(data[key]).strip()
         value = data[key]
-        #print(f"{value}\n")
+        #value = str(data[key]).strip()
+        print(f"{key} found! ({value})\n")
+
+        # Look for all ResourceHeader Description components and add if found
         if tag == "Description":
-    
-            if key ==" DESCRPTN":
-                descriptionParts.append(f"{value}")
+            if key == "DESCRPTN":
+                descriptionParts.insert(0,value)
             elif key == "CAMERA":
                 descriptionParts.append(f"CAMERA: {value}")
             elif key == "CAR_ROT":
@@ -205,31 +206,45 @@ for key, tag in displayDataMap.items():
             elif key == "XPOSURE":
                 descriptionParts.append(f"Exposures: {value}")       
             elif key == "HISTORY":
-                descriptionParts.append(f"{value}")
+                descriptionEnd = value
             else:
                 KeyError(f"{key} not recognized in FITS-SPASE mapping")
+        # Assign values of fields not mapped to Description
         else:
             mappedFields[tag] = value
-
     else:
         j+=1
         print(f"{key} NOT found\n")
 
-# Conjoin parts of description
-finalDescription = ". ".join(descriptionParts) + "."
-
-print(finalDescription)
-
-"""# Define namespaces and find ResourceHeader in ElementTree root
-namespaces = {"spase": f"{NAMESPACE_URI}"}
-resource_header = root.find('.//spase:ResourceHeader', namespaces=namespaces)
-
-desc_elem = resource_header.find('spase:Description', namespaces=namespaces)
-if desc_elem is None:
-    # Create it if it doesn't exist
-    desc_elem = ET.SubElement(resource_header, f"{{{NAMESPACE_URI}}}Description")
-desc_elem.text = final_description
-
-# Assess what fields are present or not
+# Assess how many fields are present or not
+print(f"Total # of fields: {i+j}")
 print(f"Total found: {i}")
-print(f"Total not found: {j}")"""
+print(f"Total not found: {j}")
+
+# Conjoin parts of description
+finalDescription = ". ".join(descriptionParts) + f". {descriptionEnd}."
+
+# Define namespaces and find ResourceHeader in ElementTree root
+namespaces = {"spase": f"{NAMESPACE_URI}"}
+resourceHeader = root.find('.//spase:ResourceHeader', namespaces=namespaces)
+
+# Find ResourceHeader description
+descElem = resourceHeader.find('spase:Description', namespaces=namespaces)
+
+# Create if it doesn't exist and insert full final description
+if descElem is None:
+    descElem = etree.SubElement(resourceHeader, f"{{{NAMESPACE_URI}}}Description")
+descElem.text = finalDescription
+
+# Find other mapped fields, or create if needed, and insert value
+for tag, value in mappedFields.items():
+    elem = resourceHeader.find(f'spase:{tag}', namespaces=namespaces)
+    if elem is None:
+        elem = etree.SubElement(resourceHeader, f"{{{NAMESPACE_URI}}}{tag}")
+    elem.text = value
+
+# Save modified XML tree to file
+output_xml = 'mapped_spase_display_data.xml'
+tree.write(output_xml, encoding='utf-8', xml_declaration=True,
+           default_namespace=NAMESPACE_URI,short_empty_elements=False)
+print(f"Success! FITS > JSON > XML mapped and saved to {output_xml}")
