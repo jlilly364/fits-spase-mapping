@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Spase xmlns="http://www.spase-group.org/data/schema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <NumericalData>
+        <ResourceID></ResourceID>
+        <ResourceHeader>
+            <ResourceName></ResourceName>
+            <ReleaseDate></ReleaseDate>
+            <Description></Description>
+            <Contact>
+                <PersonID></PersonID>
+                <Role></Role>
+            </Contact>
+        </ResourceHeader>
+        <AccessInformation>
+            <RepositoryID></RepositoryID>
+            <AccessURL>
+                <URL></URL>
+            </AccessURL>
+            <Format></Format>
+        </AccessInformation>
+        <MeasurementType></MeasurementType>
+    </NumericalData>
+</Spase>
