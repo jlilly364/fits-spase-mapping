@@ -8,7 +8,7 @@
             <Description>PUNCH Level-3 data, Composite mosaic in output coordinates. Carrington rotations 2307.9983817402494. CTYPE1: HPLN-ARC. CTYPE2: HPLT-ARC. CUNIT1: deg. CUNIT2: deg. Heliosphere white light. Observation modes: Unpolarized. Records of processing from pipeline.</Description>
             <Contact>
                 <PersonID>SwRI</PersonID>
-                <Role></Role>
+                <Role>HostContact</Role>
             </Contact>
         </ResourceHeader>
         <AccessInformation>

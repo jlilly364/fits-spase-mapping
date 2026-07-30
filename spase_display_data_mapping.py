@@ -29,30 +29,29 @@ import time
 
 # Not mapped in FITS: ResourceID, Contact>Role,
 #                     AccessInformation>(RepositoryID,AccessURL)
-# Dict of fields that map within DisplayData            
-displayDataMap = {"OBSTITLE":"ResourceName","TITLE":"ResourceName",
-                  
-                  "RELEASE":"ReleaseDate",
+# Dict of fields that map within Display and NumericalData            
+dataMap = {"OBSTITLE":"ResourceName","TITLE":"ResourceName",
 
-                  "CAMERA":"Description","CAR_ROT":"Description",
-                  "CRS_DESC":"Description","CRS:TYPE":"Description",
-                  "CTYPE1":"Description","CTYPE2":"Description",
-                  "CUNIT1":"Description","CUNIT2":"Description",
-                  "DESCRPTN":"Description","FILTER":"Description",
-                  "GRATING":"Description","HISTORY":"Description",
-                  "OBJECT":"Description","OBS_DESC":"Description",
-                  "OBS_ID":"Description","OBS-MODE":"Description",
-                  "TELCONFG":"Description","TEXPOSUR":"Description",
-                  "TDESCn":"Description","UCD":"Description",
-                  "EXPTIME":"Description","XPOSURE":"Description",
+           "RELEASE":"ReleaseDate",
 
-                  "AUTHOR":"PersonID","ORIGIN":"PersonID",
-                  "RELEASEC":"PersonID",
+           "CAMERA":"Description","CAR_ROT":"Description",
+           "CRS_DESC":"Description","CRS:TYPE":"Description",
+           "CTYPE1":"Description","CTYPE2":"Description",
+           "CUNIT1":"Description","CUNIT2":"Description",
+           "DESCRPTN":"Description","FILTER":"Description",
+           "GRATING":"Description","HISTORY":"Description",
+           "OBJECT":"Description","OBS_DESC":"Description",
+           "OBS_ID":"Description","OBS-MODE":"Description",
+           "TELCONFG":"Description","TEXPOSUR":"Description",
+           "TDESCn":"Description","UCD":"Description",
+           "EXPTIME":"Description","XPOSURE":"Description",
 
-                  "FITS":"Format",
+           "AUTHOR":"PersonID","ORIGIN":"PersonID","RELEASEC":"PersonID",
 
-                  "BTYPE":"MeasurmentType"
-                  }
+           "FITS":"Format",
+
+           "BTYPE":"MeasurmentType"
+}
 
 # Define the namespace URI
 NAMESPACE_URI = "http://www.spase-group.org/data/schema"
@@ -146,10 +145,11 @@ i,j = 0,0
 descriptionParts = []
 mappedFields = {}
 personIDs = []
+roles = []
 descriptionEnd = None
 
 # Loop through FITS metadata keys and associated SPASE xml tags
-for key, tag in displayDataMap.items():
+for key, tag in dataMap.items():
     if key in data:
         i+=1
         value = data[key]
@@ -213,6 +213,12 @@ for key, tag in displayDataMap.items():
 
         elif tag == "PersonID":
             print(f"PersonID: {value}")
+            if key == "AUTHOR":
+                roles.append("Author")
+            elif key == "ORIGIN":
+                roles.append("HostContact")
+            elif key == "RELEASEC":
+                roles.append("DataProducer")
             personIDs.append(value)
 
         # Assign values of fields not mapped to Description
@@ -244,13 +250,17 @@ if descElem is None:
 descElem.text = finalDescription
 
 # Create Contact and PersonID elements for all fields that provide one
-for personID in personIDs:
+for i, personID in enumerate(personIDs):
     contactElem = resourceHeader.find('spase:Contact', namespaces=namespaces)
     pidElem = contactElem.find('spase:PersonID', namespaces=namespaces)
+    roleElem = contactElem.find('spase:Role', namespaces=namespaces)
+
     if contactElem is None:
         contactElem = etree.SubElement(resourceHeader, f"{{{NAMESPACE_URI}}}Contact")
         pidElem = etree.SubElement(contactElem, f"{{{NAMESPACE_URI}}}PersonID")
+        roleElem = etree.SubElement(contactElem, namespaces=namespaces)
     pidElem.text = personID
+    roleElem.text = roles[i]
 
 # Find other mapped fields, or create if needed, and insert value
 for tag, value in mappedFields.items():
