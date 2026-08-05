@@ -1,18 +1,18 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Spase xmlns="http://www.spase-group.org/data/schema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<?xml version='1.0' encoding='utf-8'?>
+<Spase xmlns="http://www.spase-group.org/data/schema">
     <NumericalData>
         <ResourceID></ResourceID>
         <ResourceHeader>
-            <ResourceName></ResourceName>
+            <ResourceName>PUNCH Level-3 Intermediate F-corona Subtracted Unpolarized Mosaic</ResourceName>
             <ReleaseDate></ReleaseDate>
-            <Description></Description>
+            <Description>PUNCH Level-3 data, Composite mosaic in output coordinates. Carrington rotations 2307.9983817402494. Coordinate System: HPLN-ARC (deg) x HPLT-ARC (deg). Heliosphere white light. Observation modes: Unpolarized. Records of processing from pipeline.</Description>
             <Funding> 
                 <Agency></Agency>
                 <Project></Project>
-            </Funding>
+            </Funding>  
             <Contact>
-                <PersonID></PersonID>
-                <Role></Role>
+                <PersonID>SwRI</PersonID>
+                <Role>HostContact</Role>
             </Contact>
             <InformationURL> 
                 <Name></Name> 
@@ -63,6 +63,7 @@
             <Field>
                 <FieldQuantity></FieldQuantity>
             </Field>
+            
             <SpatialCoverage>
                 <CoordinateSystem>
                     <CoordinateRepresentation></CoordinateRepresentation>
