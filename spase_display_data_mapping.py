@@ -34,6 +34,7 @@ dataMap = {"OBSTITLE":"ResourceName","TITLE":"ResourceName",
 
            "RELEASE":"ReleaseDate",
 
+           "_comment": "ResourceHeader Description Elements",
            "CAMERA":"Description","CAR_ROT":"Description",
            "CRS_DESC":"Description","CRS:TYPE":"Description",
            "CTYPE1":"Description","CTYPE2":"Description",
@@ -50,7 +51,20 @@ dataMap = {"OBSTITLE":"ResourceName","TITLE":"ResourceName",
 
            "FITS":"Format",
 
-           "BTYPE":"MeasurmentType"
+           "BTYPE":"MeasurmentType",
+
+           "BNDCTR":"SpectralRange",
+
+            "_comment": "Parameter Description Elements",
+           "BNAME":"Description",
+           "CDELT1":"Description","CDELT2":"Description","CDELTn":"Description",
+           "CUNIT1":"Description","CUNIT2":"Description","CUNITn":"Description",
+           "NAXIS":"Description","NAXIS1":"Description","NAXIS2":"Description",
+           "NAXISn"
+
+           "BUNIT":"Units",
+
+           "CADENCE":"Cadence","CADMIN":"CadenceMin","CADMAX":"CadenceMax",
 }
 
 # Define the namespace URI
