@@ -40,6 +40,8 @@ dataMap = {"OBSTITLE":"ResourceName","TITLE":"ResourceName",
 
            "BNDCTR":"SpectralRange",
 
+           "EXTNAME":"Name","FILTER":"Name","OBS_MODE":"Name","XPOSURE":"Name",
+
            "BNAME":"Description",
            "CDELT1":"Description","CDELT2":"Description","CDELTn":"Description",
            "CUNIT1":"Description","CUNIT2":"Description","CUNITn":"Description",
@@ -142,12 +144,13 @@ i,j = 0,0
 
 # Initialize storage of description components, mapped data, and names
 resourceDescriptionParts = []
-paramDescriptionParts = []
-
-mappedFields = {}
 personIDs = []
 roles = []
 descriptionEnd = None
+mappedFields = {}
+
+paramDescriptionParts = []
+names = []
 
 # Loop through FITS metadata keys and associated SPASE xml tags
 for key, tag in dataMap.items():
@@ -204,9 +207,7 @@ for key, tag in dataMap.items():
                 resourceDescriptionParts.append(f"Exposures: {value}")       
             elif key == "HISTORY":
                 descriptionEnd = value
-            else:
-                print(f"{key} not recognized in FITS-SPASE mapping. Skipping")
-            """elif key == "BNAME":
+            elif key == "BNAME":
                 paramDescriptionParts.append(value)
             # "Pixel Resolution: "{CDELT1} {CUNIT1} "x"+{CDELT2}+{CUNIT2}+"x"+
             # ...+{CDELTn}+{CUNITn}"\n" for the number of axes given in {NAXIS}
@@ -214,9 +215,10 @@ for key, tag in dataMap.items():
                 paramDescriptionParts.append(f"Pixel Resolution: {value} {data["CUNIT1"]}")
                 for j in range(1,data["NAXIS"]):
                     paramDescriptionParts.append(f" x {data[f"CDELT{j}"]} {data[f"CUNIT{j}"]}")
-                paramDescriptionParts.append("\n")"""
+                paramDescriptionParts.append("\n")
+            else:
+                print(f"{key} not recognized in FITS-SPASE mapping. Skipping")
             
-
         elif tag == "PersonID":
             print(f"PersonID: {value}")
             if key == "AUTHOR":
@@ -226,6 +228,10 @@ for key, tag in dataMap.items():
             elif key == "RELEASEC":
                 roles.append("DataProducer")
             personIDs.append(value)
+
+        elif tag == "Name":
+            if key == "EXTNAME" or key == "FILTER" or key == "OBS_MODE" or key == "XPOSURE":
+                names.append(f" {value}")
 
         # Assign values of fields not mapped to Description
         else:
@@ -246,7 +252,7 @@ finalDescription = ". ".join(resourceDescriptionParts) + f". {descriptionEnd}."
 # Define namespaces and find fields in ElementTree root
 namespaces = {"spase": f"{NAMESPACE_URI}"}
 resourceHeader = root.find('.//spase:ResourceHeader', namespaces=namespaces)
-#parameter = root.find('.//spase:Parameter', namespaces=namespaces)
+parameter = root.find('.//spase:Parameter', namespaces=namespaces)
 
 # Find ResourceHeader description elements or create one if not found 
 resourceDescriptionElem = resourceHeader.find('spase:Description', namespaces=namespaces)
@@ -254,11 +260,14 @@ if resourceDescriptionElem is None:
     resourceDescriptionElem = etree.SubElement(resourceHeader, f"{{{NAMESPACE_URI}}}Description")
 resourceDescriptionElem.text = finalDescription
 
-"""# Find Parameter description elements or create one if not found 
+# Find Parameter description elements or create one if not found 
 paramDescriptionElem = parameter.find('spase:Description', namespaces=namespaces)
+paramNameElem = parameter.find('spase:Name', namespaces=namespaces)
 if paramDescriptionElem is None:
     paramDescriptionElem = etree.SubElement(parameter, f"{{{NAMESPACE_URI}}}Description")
-paramDescriptionElem.text = ". ".join(paramDescriptionParts)"""
+    paramNameElem = etree.SubElement(paramDescriptionElem, f"{{{NAMESPACE_URI}}}Name")
+paramDescriptionElem.text = ". ".join(paramDescriptionParts)
+paramNameElem.text = ". ".join(names)
 
 # Create Contact and PersonID elements for all fields that provide one
 for i, personID in enumerate(personIDs):
@@ -282,7 +291,7 @@ for tag, value in mappedFields.items():
     elem.text = value
 
 # Save modified XML tree to file
-output_xml = 'mapped_fits_spase_numerical_data.xml'
+output_xml = 'mapped_fits_spase_numerical_data_v2.xml'
 tree.write(output_xml, encoding='utf-8', xml_declaration=True,
            default_namespace=NAMESPACE_URI,short_empty_elements=False)
 print(f"Success! FITS > JSON > XML mapped and saved to {output_xml}")
