@@ -187,13 +187,7 @@ for key, tag in dataMap.items():
             elif key == "CRS_TYPE":
                 descriptionParts.append(f"SpectralRange: {value}")
             elif key == "CTYPE1":
-                descriptionParts.append(f"CTYPE1: {value}")
-            elif key == "CTYPE2":
-                descriptionParts.append(f"CTYPE2: {value}")
-            elif key == "CUNIT1":
-                descriptionParts.append(f"CUNIT1: {value}")
-            elif key == "CUNIT2":
-                descriptionParts.append(f"CUNIT2: {value}")
+                descriptionParts.append(f"Coordinate System: {value} ({data["CUNIT1"]}) x {data["CTYPE2"]} ({data["CUNIT2"]})")
             elif key == "FILTER":
                 descriptionParts.append(f"Filter: {value}")
             elif key == "GRATING":
