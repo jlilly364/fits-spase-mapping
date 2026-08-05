@@ -6,23 +6,23 @@
             <ResourceName></ResourceName>
             <ReleaseDate></ReleaseDate>
             <Description></Description>
-            <Funding> <!--NOT REQUIRED-->
+            <Funding> 
                 <Agency></Agency>
                 <Project></Project>
-            </Funding>  <!--NOT REQUIRED-->
+            </Funding>  
             <Contact>
                 <PersonID></PersonID>
                 <Role></Role>
             </Contact>
-            <InformationURL> <!--NOT REQUIRED-->
-                <Name></Name> <!--NOT REQUIRED-->
+            <InformationURL> 
+                <Name></Name> 
                 <URL></URL>
-                <Description></Description> <!--NOT REQUIRED-->
-            </InformationURL> <!--NOT REQUIRED-->
+                <Description></Description> 
+            </InformationURL> 
         </ResourceHeader>
         <AccessInformation>
             <RepositoryID></RepositoryID>
-            <RightsList> <!--NOT REQUIRED-->
+            <RightsList> 
                 <Rights></Rights>
             </RightsList>
             <AccessURL>
@@ -30,11 +30,11 @@
             </AccessURL>
             <Format></Format>
         </AccessInformation>
-        <ProviderName></ProviderName> <!--NOT REQUIRED-->
-        <ProviderProcessingLevel></ProviderProcessingLevel> <!--NOT REQUIRED-->
-        <InstrumentID></InstrumentID> <!--NOT REQUIRED-->
+        <ProviderName></ProviderName> 
+        <ProviderProcessingLevel></ProviderProcessingLevel> 
+        <InstrumentID></InstrumentID> 
         <MeasurementType></MeasurementType>
-        <TemporalDescription> <!--NOT REQUIRED-->
+        <TemporalDescription> 
             <TimeSpan>
                 <StartDate></StartDate>
                 <StopDate></StopDate>
@@ -43,30 +43,27 @@
             <Cadence></Cadence>
             <CadenceMin></CadenceMin>
             <CadenceMax></CadenceMax>
-        </TemporalDescription> <!--NOT REQUIRED-->
-        <SpectralRange></SpectralRange> <!--NOT REQUIRED-->
-        <ObservedRegion></ObservedRegion> <!--NOT REQUIRED-->
-        <!--SpatialCoverage element NOT REQUIRED-->
+        </TemporalDescription> 
+        <SpectralRange></SpectralRange> 
+        <ObservedRegion></ObservedRegion> 
         <SpatialCoverage>
             <CoordinateSystem>
                 <CoordinateRepresentation></CoordinateRepresentation>
                 <CoordinateSystemName></CoordinateSystemName>
             </CoordinateSystem>
-            <Description></Description> <!--NOT REQUIRED-->
+            <Description></Description> 
         </SpatialCoverage>
-        <!--Keyword Element NOT REQUIRED-->
         <Keyword></Keyword>
-        <!--Parameter elements NOT REQUIRED-->
         <Parameter>
             <Name></Name>
-            <Description></Description> <!--NOT REQUIRED-->
+            <Description></Description> 
             <Units></Units>
-            <ValidMin></ValidMin>  <!--NOT REQUIRED-->
-            <ValidMax></ValidMax>  <!--NOT REQUIRED-->
+            <ValidMin></ValidMin>  
+            <ValidMax></ValidMax>  
             <Field>
                 <FieldQuantity></FieldQuantity>
             </Field>
-            <!--SpatialCoverage Element NOT REQUIRED-->
+            
             <SpatialCoverage>
                 <CoordinateSystem>
                     <CoordinateRepresentation></CoordinateRepresentation>
@@ -76,15 +73,14 @@
         </Parameter>
         <Parameter>
             <Name></Name>
-            <Description></Description> <!--NOT REQUIRED-->
-            <Units></Units> <!--NOT REQUIRED-->
-            <ValidMin></ValidMin>  <!--NOT REQUIRED-->
-            <ValidMax></ValidMax>  <!--NOT REQUIRED-->
+            <Description></Description> 
+            <Units></Units> 
+            <ValidMin></ValidMin>  
+            <ValidMax></ValidMax>  
             <Particle>
                 <ParticleType></ParticleType>
                 <ParticleQuantity></ParticleQuantity>
             </Particle>
-            <!--SpatialCoverage Element NOT REQUIRED-->
             <SpatialCoverage>
                 <CoordinateSystem>
                     <CoordinateRepresentation></CoordinateRepresentation>
@@ -94,20 +90,19 @@
         </Parameter>
         <Parameter>
             <Name></Name>
-            <Description></Description> <!--NOT REQUIRED-->
-            <Units></Units> <!--NOT REQUIRED-->
-            <ValidMin></ValidMin>  <!--NOT REQUIRED-->
-            <ValidMax></ValidMax>  <!--NOT REQUIRED-->
+            <Description></Description> 
+            <Units></Units> 
+            <ValidMin></ValidMin>  
+            <ValidMax></ValidMax>  
             <Wave>
                 <WaveQuantity></WaveQuantity>
-                <WavelengthRange> <!--NOT REQUIRED-->
+                <WavelengthRange> 
                     <SpectralRange></SpectralRange>
                     <Low></Low>
                     <High></High>
                     <Units></Units>
-                </WavelengthRange> <!--NOT REQUIRED-->
+                </WavelengthRange> 
             </Wave>
-            <!--SpatialCoverage Element NOT REQUIRED-->
             <SpatialCoverage>
                 <CoordinateSystem>
                     <CoordinateRepresentation></CoordinateRepresentation>
@@ -117,14 +112,13 @@
         </Parameter>
         <Parameter>
             <Name></Name>
-            <Description></Description> <!--NOT REQUIRED-->
-            <Units></Units> <!--NOT REQUIRED-->
-            <ValidMin></ValidMin> <!--NOT REQUIRED-->
-            <ValidMax></ValidMax> <!--NOT REQUIRED-->
+            <Description></Description> 
+            <Units></Units> 
+            <ValidMin></ValidMin> 
+            <ValidMax></ValidMax> 
             <Mixed>
                 <MixedQuantity></MixedQuantity>
             </Mixed>
-            <!--SpatialCoverage Element NOT REQUIRED-->
             <SpatialCoverage>
                 <CoordinateSystem>
                     <CoordinateRepresentation></CoordinateRepresentation>
@@ -134,14 +128,13 @@
         </Parameter>
         <Parameter>
             <Name></Name>
-            <Description></Description> <!--NOT REQUIRED-->
-            <Units></Units> <!--NOT REQUIRED-->
-            <ValidMin></ValidMin> <!--NOT REQUIRED-->
-            <ValidMax></ValidMax> <!--NOT REQUIRED-->
+            <Description></Description> 
+            <Units></Units> 
+            <ValidMin></ValidMin> 
+            <ValidMax></ValidMax> 
             <Support>
                 <SupportQuantity></SupportQuantity>
             </Support>
-            <!--SpatialCoverage Element NOT REQUIRED-->
             <SpatialCoverage>
                 <CoordinateSystem>
                     <CoordinateRepresentation></CoordinateRepresentation>
@@ -149,7 +142,6 @@
                 </CoordinateSystem>
             </SpatialCoverage>
         </Parameter>
-        <!--SpatialCoverage Element NOT REQUIRED-->
         <SpatialCoverage>
             <CoordinateSystem>
                 <CoordinateRepresentation></CoordinateRepresentation>
