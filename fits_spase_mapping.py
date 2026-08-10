@@ -51,6 +51,9 @@ dataMap = {"OBSTITLE":"ResourceName","TITLE":"ResourceName",
            "BUNIT":"Units",
 
            "CADENCE":"Cadence","CADMIN":"CadenceMin","CADMAX":"CadenceMax",
+
+           "COMMENT":"URL","DOC_URL":"URL","DOI":"URL","INFO_URL":"URL",
+           "KEYWDDOC":"URL","REFERENCEC":"URL","SCI_SW":"URL"
 }
 
 # Define the namespace URI
@@ -142,15 +145,18 @@ with open(json_file, 'r', encoding='utf-8') as file:
 # Initialize counters
 i,j = 0,0
 
-# Initialize storage of description components, mapped data, and names
+# Initialize storage of ResourceHeader description components
 resourceDescriptionParts = []
 personIDs = []
 roles = []
-descriptionEnd = None
-mappedFields = {}
+resourceDescriptionEnd = None
 
+# Initialize storage of Parameter description components
 paramDescriptionParts = []
 names = []
+
+# Initialize dictionary for all other mapped fields
+mappedFields = {}
 
 # Loop through FITS metadata keys and associated SPASE xml tags
 for key, tag in dataMap.items():
@@ -206,19 +212,27 @@ for key, tag in dataMap.items():
             elif key == "XPOSURE":
                 resourceDescriptionParts.append(f"Exposures: {value}")       
             elif key == "HISTORY":
-                descriptionEnd = value
+                resourceDescriptionEnd = value
+
+            # Constructing components of Parameter description field
             elif key == "BNAME":
-                paramDescriptionParts.append(value)
+                paramDescriptionParts += value
             # "Pixel Resolution: "{CDELT1} {CUNIT1} "x"+{CDELT2}+{CUNIT2}+"x"+
             # ...+{CDELTn}+{CUNITn}"\n" for the number of axes given in {NAXIS}
             elif key == "CDELT1":
                 paramDescriptionParts.append(f"Pixel Resolution: {value} {data["CUNIT1"]}")
                 for j in range(1,data["NAXIS"]):
-                    paramDescriptionParts.append(f" x {data[f"CDELT{j}"]} {data[f"CUNIT{j}"]}")
+                    paramDescriptionParts.append(f"x {data[f"CDELT{j}"]} {data[f"CUNIT{j}"]}")
+                paramDescriptionParts.append("\n")
+            elif key == "NAXIS":
+                paramDescriptionParts.append(f"Array size: {data["NAXIS1"]}")
+                for j in range(1,value):
+                    paramDescriptionParts.append(f"x {data[f"NAXIS{j}"]}")
                 paramDescriptionParts.append("\n")
             else:
                 print(f"{key} not recognized in FITS-SPASE mapping. Skipping")
-            
+
+        # Assign proper role depending on FITS fields
         elif tag == "PersonID":
             print(f"PersonID: {value}")
             if key == "AUTHOR":
@@ -247,7 +261,9 @@ print(f"Total not found: {j}")
 #print(personIDs)
 
 # Conjoin parts of description
-finalDescription = ". ".join(resourceDescriptionParts) + f". {descriptionEnd}."
+resourceDescription = ". ".join(resourceDescriptionParts) + f". {resourceDescriptionEnd}."
+parameterDescription = ". ".join(paramDescriptionParts)
+
 
 # Define namespaces and find fields in ElementTree root
 namespaces = {"spase": f"{NAMESPACE_URI}"}
@@ -258,7 +274,7 @@ parameter = root.find('.//spase:Parameter', namespaces=namespaces)
 resourceDescriptionElem = resourceHeader.find('spase:Description', namespaces=namespaces)
 if resourceDescriptionElem is None:
     resourceDescriptionElem = etree.SubElement(resourceHeader, f"{{{NAMESPACE_URI}}}Description")
-resourceDescriptionElem.text = finalDescription
+resourceDescriptionElem.text = resourceDescription
 
 # Find Parameter description elements or create one if not found 
 paramDescriptionElem = parameter.find('spase:Description', namespaces=namespaces)

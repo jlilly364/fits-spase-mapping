@@ -56,7 +56,8 @@
         <Keyword></Keyword>
         <Parameter>
             <Name> PRIMARY DATA ARRAY</Name>
-            <Description>Pixel Resolution: 0.0225 deg.  x 0.0225 deg. 
+            <Description>Pixel Resolution: 0.0225 deg. x 0.0225 deg. 
+. Array size: 4096. x 4096. 
 </Description> 
             <Units></Units>
             <ValidMin></ValidMin>  
