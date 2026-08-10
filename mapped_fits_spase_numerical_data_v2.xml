@@ -19,7 +19,7 @@
                 <URL></URL>
                 <Description></Description> 
             </InformationURL> 
-        </ResourceHeader>
+        <Units>2.009e+07 W/(m2 sr)</Units><URL>https://doi.org/10.48322/nnv7-bn21</URL></ResourceHeader>
         <AccessInformation>
             <RepositoryID></RepositoryID>
             <RightsList> 
@@ -55,11 +55,11 @@
         </SpatialCoverage>
         <Keyword></Keyword>
         <Parameter>
-            <Name> PRIMARY DATA ARRAY</Name>
+            <Name>PRIMARY DATA ARRAY</Name>
             <Description>Pixel Resolution: 0.0225 deg. x 0.0225 deg. 
 . Array size: 4096. x 4096. 
 </Description> 
-            <Units></Units>
+            <Units>2.009e+07 W/(m2 sr)</Units>
             <ValidMin></ValidMin>  
             <ValidMax></ValidMax>  
             <Field>

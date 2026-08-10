@@ -40,13 +40,11 @@ dataMap = {"OBSTITLE":"ResourceName","TITLE":"ResourceName",
 
            "BNDCTR":"SpectralRange",
 
-           "EXTNAME":"Name","FILTER":"Name","OBS_MODE":"Name","XPOSURE":"Name",
-
            "BNAME":"Description",
            "CDELT1":"Description","CDELT2":"Description","CDELTn":"Description",
            "CUNIT1":"Description","CUNIT2":"Description","CUNITn":"Description",
            "NAXIS":"Description","NAXIS1":"Description","NAXIS2":"Description",
-           "NAXISn"
+           "NAXISn":"Description",
 
            "BUNIT":"Units",
 
@@ -55,6 +53,7 @@ dataMap = {"OBSTITLE":"ResourceName","TITLE":"ResourceName",
            "COMMENT":"URL","DOC_URL":"URL","DOI":"URL","INFO_URL":"URL",
            "KEYWDDOC":"URL","REFERENCEC":"URL","SCI_SW":"URL"
 }
+nameMap = {"FILTER":"Name","OBS-MODE":"Name","XPOSURE":"Name"}
 
 # Define the namespace URI
 NAMESPACE_URI = "http://www.spase-group.org/data/schema"
@@ -64,12 +63,12 @@ ET.register_namespace("", NAMESPACE_URI)
 # Parse ElementTree and extract root
 parser = etree.XMLParser()
 tree = ET.parse('spase_numerical_data_fits.xml', parser)
-print(tree)
+#print(tree)
 root = tree.getroot()
 
-# Iterate through root to see subfields
-for elt in root.iter(tag=etree.Element):
-    print(elt.tag)
+# # Iterate through root to see subfields
+# for elt in root.iter(tag=etree.Element):
+#     print(elt.tag)
 
 class fits_header_to_json():
     def __init__(self,fits_url):
@@ -160,12 +159,11 @@ mappedFields = {}
 
 # Loop through FITS metadata keys and associated SPASE xml tags
 for key, tag in dataMap.items():
-    print(key,tag)
     if key in data:
         i+=1
         value = data[key]
         #value = str(data[key]).strip()
-        print(f"{key} found! ({value})\n")
+        print(f"{key} found! ")
 
         # Look for all ResourceHeader Description components and add if found
         if tag == "Description":
@@ -215,8 +213,9 @@ for key, tag in dataMap.items():
                 resourceDescriptionEnd = value
 
             # Constructing components of Parameter description field
-            elif key == "BNAME":
-                paramDescriptionParts += value
+            # elif key == "BNAME":
+            #     paramDescriptionParts.append(value)
+
             # "Pixel Resolution: "{CDELT1} {CUNIT1} "x"+{CDELT2}+{CUNIT2}+"x"+
             # ...+{CDELTn}+{CUNITn}"\n" for the number of axes given in {NAXIS}
             elif key == "CDELT1":
@@ -229,8 +228,6 @@ for key, tag in dataMap.items():
                 for j in range(1,value):
                     paramDescriptionParts.append(f"x {data[f"NAXIS{j}"]}")
                 paramDescriptionParts.append("\n")
-            else:
-                print(f"{key} not recognized in FITS-SPASE mapping. Skipping")
 
         # Assign proper role depending on FITS fields
         elif tag == "PersonID":
@@ -241,29 +238,31 @@ for key, tag in dataMap.items():
                 roles.append("HostContact")
             elif key == "RELEASEC":
                 roles.append("DataProducer")
-            personIDs.append(value)
+            personIDs.append(value)            
 
-        elif tag == "Name":
-            if key == "EXTNAME" or key == "FILTER" or key == "OBS_MODE" or key == "XPOSURE":
-                names.append(f" {value}")
-
-        # Assign values of fields not mapped to Description
+        # Assign values of fields not mapped to previous fields
         else:
             mappedFields[tag] = value
-    else:
-        j+=1
-        print(f"{key} NOT found\n")
+            print(f"Key:{key} | Tag:{tag} | Value = {value}\n")
+    # else:
+    #     j += 1
+    #     print(f"{key} not recognized in FITS-SPASE mapping. Skipping")
+
+if "EXTNAME" in data:
+    names.append(data["EXTNAME"])
+else:
+    for key, tag in nameMap.items():
+        print(key,tag)
+        names.append(data[key])
 
 # Assess how many fields are present or not
 print(f"Total # of fields: {i+j}")
 print(f"Total found: {i}")
 print(f"Total not found: {j}")
-#print(personIDs)
 
 # Conjoin parts of description
 resourceDescription = ". ".join(resourceDescriptionParts) + f". {resourceDescriptionEnd}."
 parameterDescription = ". ".join(paramDescriptionParts)
-
 
 # Define namespaces and find fields in ElementTree root
 namespaces = {"spase": f"{NAMESPACE_URI}"}
@@ -276,14 +275,23 @@ if resourceDescriptionElem is None:
     resourceDescriptionElem = etree.SubElement(resourceHeader, f"{{{NAMESPACE_URI}}}Description")
 resourceDescriptionElem.text = resourceDescription
 
-# Find Parameter description elements or create one if not found 
-paramDescriptionElem = parameter.find('spase:Description', namespaces=namespaces)
+# Find Parameter elements, create them if not found, and map value to field
 paramNameElem = parameter.find('spase:Name', namespaces=namespaces)
+paramDescriptionElem = parameter.find('spase:Description', namespaces=namespaces)
+paramUnitElem = parameter.find('spase:Units', namespaces=namespaces)
+
+# Should already be in SPASE record because it's required
+if paramNameElem is None:
+    paramNameElem = etree.SubElement(parameter, f"{{{NAMESPACE_URI}}}Name")
+paramNameElem.text = ". ".join(names)
+
 if paramDescriptionElem is None:
     paramDescriptionElem = etree.SubElement(parameter, f"{{{NAMESPACE_URI}}}Description")
-    paramNameElem = etree.SubElement(paramDescriptionElem, f"{{{NAMESPACE_URI}}}Name")
 paramDescriptionElem.text = ". ".join(paramDescriptionParts)
-paramNameElem.text = ". ".join(names)
+
+if (paramUnitElem is None) and ("BUNIT" in data):
+    paramUnitElem = etree.SubElement(parameter, f"{{{NAMESPACE_URI}}}Units")
+paramUnitElem.text = data["BUNIT"]
 
 # Create Contact and PersonID elements for all fields that provide one
 for i, personID in enumerate(personIDs):
@@ -301,10 +309,10 @@ for i, personID in enumerate(personIDs):
 # Find other mapped fields, or create if needed, and insert value
 for tag, value in mappedFields.items():
     print(f"Now inserting {tag}: {value}")
-    elem = resourceHeader.find(f'spase:{tag}', namespaces=namespaces)
-    if elem is None:
-        elem = etree.SubElement(resourceHeader, f"{{{NAMESPACE_URI}}}{tag}")
-    elem.text = value
+    resourceElem = resourceHeader.find(f'spase:{tag}', namespaces=namespaces)
+    if resourceElem is None:
+        resourceElem = etree.SubElement(resourceHeader, f"{{{NAMESPACE_URI}}}{tag}")
+    resourceElem.text = value
 
 # Save modified XML tree to file
 output_xml = 'mapped_fits_spase_numerical_data_v2.xml'
