@@ -3,23 +3,29 @@
     <NumericalData>
         <ResourceID></ResourceID>
         <ResourceHeader>
-            <ResourceName>PUNCH Level-3 Intermediate F-corona Subtracted Unpolarized Mosaic</ResourceName>
+            <ResourceName></ResourceName>
             <ReleaseDate></ReleaseDate>
-            <Description>PUNCH Level-3 data, Composite mosaic in output coordinates. Carrington rotations 2307.9983817402494. Coordinate System: HPLN-ARC (deg) x HPLT-ARC (deg). Heliosphere white light. Observation modes: Unpolarized. Records of processing from pipeline.</Description>
+            <Description>PUNCH Level-3 data, Composite mosaic in output coordinates
+. Carrington rotations 2307.9983817402494
+. Pixel Resolution: 0.0225 deg x 0.0225 deg
+. Coordinate System: HPLN-ARC (deg) x HPLT-ARC (deg)
+. Heliosphere white light
+. Observation modes: Unpolarized
+. Records of processing from pipeline.</Description>
             <Funding> 
                 <Agency></Agency>
-                <Project></Project>
+                <Project>PUNCH</Project>
             </Funding>
             <Contact>
                 <PersonID>SwRI</PersonID>
                 <Role>HostContact</Role>
             </Contact>
             <InformationURL> 
-                <Name></Name> 
-                <URL></URL>
-                <Description></Description> 
+                <Name>DOI</Name> 
+                <URL>https://doi.org/10.48322/nnv7-bn21</URL>
+                <Description>DOI</Description> 
             </InformationURL> 
-        <Units>2.009e+07 W/(m2 sr)</Units><URL>https://doi.org/10.48322/nnv7-bn21</URL></ResourceHeader>
+        </ResourceHeader>
         <AccessInformation>
             <RepositoryID></RepositoryID>
             <RightsList> 
@@ -55,11 +61,9 @@
         </SpatialCoverage>
         <Keyword></Keyword>
         <Parameter>
-            <Name>PRIMARY DATA ARRAY</Name>
-            <Description>Pixel Resolution: 0.0225 deg. x 0.0225 deg. 
-. Array size: 4096. x 4096. 
-</Description> 
-            <Units>2.009e+07 W/(m2 sr)</Units>
+            <Name></Name>
+            <Description></Description> 
+            <Units></Units>
             <ValidMin></ValidMin>  
             <ValidMax></ValidMax>  
             <Field>
@@ -143,11 +147,5 @@
                 </CoordinateSystem>
             </SpatialCoverage>
         </Parameter>
-        <SpatialCoverage>
-            <CoordinateSystem>
-                <CoordinateRepresentation></CoordinateRepresentation>
-                <CoordinateSystemName></CoordinateSystemName>
-            </CoordinateSystem>
-        </SpatialCoverage>
     </NumericalData>
 </Spase>
