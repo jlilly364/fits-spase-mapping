@@ -12,7 +12,7 @@
 . Heliosphere white light
 . Observation modes: Unpolarized
 . Records of processing from pipeline.</Description>
-            <Funding> 
+            <Funding>
                 <Agency></Agency>
                 <Project>PUNCH</Project>
             </Funding>
@@ -20,15 +20,20 @@
                 <PersonID>SwRI</PersonID>
                 <Role>HostContact</Role>
             </Contact>
-            <InformationURL> 
-                <Name>DOI</Name> 
+            <InformationURL>
+                <Name>DOC_URL</Name>
+                <URL>https://punch.spaceops.swri.org</URL>
+                <Description>DOC_URL</Description>
+            </InformationURL>
+            <InformationURL>
+                <Name>DOI</Name>
                 <URL>https://doi.org/10.48322/nnv7-bn21</URL>
-                <Description>DOI</Description> 
-            </InformationURL> 
+                <Description>DOI</Description>
+            </InformationURL>
         </ResourceHeader>
         <AccessInformation>
             <RepositoryID></RepositoryID>
-            <RightsList> 
+            <RightsList>
                 <Rights></Rights>
             </RightsList>
             <AccessURL>
@@ -36,11 +41,11 @@
             </AccessURL>
             <Format></Format>
         </AccessInformation>
-        <ProviderName></ProviderName> 
-        <ProviderProcessingLevel></ProviderProcessingLevel> 
-        <InstrumentID></InstrumentID> 
+        <ProviderName></ProviderName>
+        <ProviderProcessingLevel></ProviderProcessingLevel>
+        <InstrumentID></InstrumentID>
         <MeasurementType></MeasurementType>
-        <TemporalDescription> 
+        <TemporalDescription>
             <TimeSpan>
                 <StartDate></StartDate>
                 <StopDate></StopDate>
@@ -49,23 +54,23 @@
             <Cadence></Cadence>
             <CadenceMin></CadenceMin>
             <CadenceMax></CadenceMax>
-        </TemporalDescription> 
-        <SpectralRange></SpectralRange> 
-        <ObservedRegion></ObservedRegion> 
+        </TemporalDescription>
+        <SpectralRange></SpectralRange>
+        <ObservedRegion></ObservedRegion>
         <SpatialCoverage>
             <CoordinateSystem>
                 <CoordinateRepresentation></CoordinateRepresentation>
                 <CoordinateSystemName></CoordinateSystemName>
             </CoordinateSystem>
-            <Description></Description> 
+            <Description></Description>
         </SpatialCoverage>
         <Keyword></Keyword>
         <Parameter>
             <Name></Name>
-            <Description></Description> 
+            <Description></Description>
             <Units></Units>
-            <ValidMin></ValidMin>  
-            <ValidMax></ValidMax>  
+            <ValidMin></ValidMin>
+            <ValidMax></ValidMax>
             <Field>
                 <FieldQuantity></FieldQuantity>
             </Field>
@@ -78,10 +83,10 @@
         </Parameter>
         <Parameter>
             <Name></Name>
-            <Description></Description> 
-            <Units></Units> 
-            <ValidMin></ValidMin>  
-            <ValidMax></ValidMax>  
+            <Description></Description>
+            <Units></Units>
+            <ValidMin></ValidMin>
+            <ValidMax></ValidMax>
             <Particle>
                 <ParticleType></ParticleType>
                 <ParticleQuantity></ParticleQuantity>
@@ -95,18 +100,18 @@
         </Parameter>
         <Parameter>
             <Name></Name>
-            <Description></Description> 
-            <Units></Units> 
-            <ValidMin></ValidMin>  
-            <ValidMax></ValidMax>  
+            <Description></Description>
+            <Units></Units>
+            <ValidMin></ValidMin>
+            <ValidMax></ValidMax>
             <Wave>
                 <WaveQuantity></WaveQuantity>
-                <WavelengthRange> 
+                <WavelengthRange>
                     <SpectralRange></SpectralRange>
                     <Low></Low>
                     <High></High>
                     <Units></Units>
-                </WavelengthRange> 
+                </WavelengthRange>
             </Wave>
             <SpatialCoverage>
                 <CoordinateSystem>
@@ -117,10 +122,10 @@
         </Parameter>
         <Parameter>
             <Name></Name>
-            <Description></Description> 
-            <Units></Units> 
-            <ValidMin></ValidMin> 
-            <ValidMax></ValidMax> 
+            <Description></Description>
+            <Units></Units>
+            <ValidMin></ValidMin>
+            <ValidMax></ValidMax>
             <Mixed>
                 <MixedQuantity></MixedQuantity>
             </Mixed>
@@ -133,10 +138,10 @@
         </Parameter>
         <Parameter>
             <Name></Name>
-            <Description></Description> 
-            <Units></Units> 
-            <ValidMin></ValidMin> 
-            <ValidMax></ValidMax> 
+            <Description></Description>
+            <Units></Units>
+            <ValidMin></ValidMin>
+            <ValidMax></ValidMax>
             <Support>
                 <SupportQuantity></SupportQuantity>
             </Support>

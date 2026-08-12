@@ -180,6 +180,8 @@ class fitsSpaseMapping:
         personIDs = []
         roles = []
         resourceDescriptionEnd = None
+        fitsURLs = ["COMMENT","DOC_URL","DOI","INFO_URL","KEYWDDOC","REFERENCEC","SCI_SW"]
+        infoURLs = []
 
         # Initialize counters
         i,j = 0,0
@@ -258,12 +260,20 @@ class fitsSpaseMapping:
                         roles.append("HostContact")
                     elif key == "RELEASEC":
                         roles.append("DataProducer")
-                    personIDs.append(value)            
-    
-                """# Assign values of fields not mapped to previous fields
-                else:
-                    mappedFields[tag] = value
-                    print(f"Key:{key} | Tag:{tag} | Value = {value}\n")"""
+                    personIDs.append(value)
+
+                    """# Assign values of fields not mapped to previous fields
+                    else:
+                        mappedFields[tag] = value
+                        print(f"Key:{key} | Tag:{tag} | Value = {value}\n")"""
+
+                # InformationURLs
+                elif key in fitsURLs:
+                    if key != "COMMENT":
+                        infoURLs.append([key,value])
+                    else:
+                        if "//" in key or len(value)==19:
+                            infoURLs.append([key,value])
 
         # Assess how many fields are present or not
         # print(f"Total # of fields: {j+k}")
@@ -301,15 +311,30 @@ class fitsSpaseMapping:
         projectElem.text = self.data["PROJECT"]
 
         # Map Information URLs
+        # Possible FITS keywords: 
+        # "COMMENT","DOC_URL","DOI","INFO_URL","KEYWDDOC","REFERENCEC","SCI_SW"
         infoURLElem = resourceHeader.find('spase:InformationURL', namespaces=self.namespaces)
         nameElem = infoURLElem.find('spase:Name', namespaces=self.namespaces)
-        nameElem.text = "DOI"
-
         urlElem = infoURLElem.find('spase:URL', namespaces=self.namespaces)
-        urlElem.text = self.data["DOI"]
-
         descriptionElem = infoURLElem.find('spase:Description', namespaces=self.namespaces)
-        descriptionElem.text = "DOI"
+
+        # Include first InformationURL from FITS file into pre-existing element
+        nameElem.text = infoURLs[i][0]
+        urlElem.text = infoURLs[i][1]
+        descriptionElem.text = infoURLs[i][0]
+
+        # Create new InformationURL elements for additional links found
+        for i in range(1,len(infoURLs)):
+            infoURLElem = etree.SubElement(resourceHeader, f"{{{self.NAMESPACE_URI}}}InformationURL")
+            nameElem = etree.SubElement(infoURLElem, f"{{{self.NAMESPACE_URI}}}Name")
+            urlElem = etree.SubElement(infoURLElem, f"{{{self.NAMESPACE_URI}}}URL")
+            descriptionElem = etree.SubElement(infoURLElem, f"{{{self.NAMESPACE_URI}}}Description")
+            nameElem.text = infoURLs[i][0]
+            urlElem.text = infoURLs[i][1]
+            descriptionElem.text = infoURLs[i][0]
+
+            print(nameElem.text,urlElem.text,descriptionElem.text)
+        
 
         # Find other mapped fields, or create if needed, and insert value
         for tag, value in mappedFields.items():
@@ -319,8 +344,10 @@ class fitsSpaseMapping:
                 resourceElem = etree.SubElement(resourceHeader, f"{{{self.NAMESPACE_URI}}}{tag}")
             resourceElem.text = value
 
+        ET.indent(self.root, space="    ")
+
         output_xml = 'mapped_fits_spase_numerical_data_v2.xml'
-        tree.write(output_xml, encoding='utf-8', xml_declaration=True,
+        self.tree.write(output_xml, encoding='utf-8', xml_declaration=True,
         default_namespace=self.NAMESPACE_URI,short_empty_elements=False)
         print(f"Success! FITS > JSON > XML mapped and saved to {output_xml}")
 
