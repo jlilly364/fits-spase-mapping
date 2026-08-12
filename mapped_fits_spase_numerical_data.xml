@@ -66,9 +66,9 @@
         </SpatialCoverage>
         <Keyword></Keyword>
         <Parameter>
-            <Name></Name>
-            <Description></Description>
-            <Units></Units>
+            <Name>PRIMARY DATA ARRAY</Name>
+            <Description>Pixel Resolution: 0.0225 deg x 0.0225 deg. Array size: 4096. x 4096</Description>
+            <Units>2.009e+07 W/(m2 sr)</Units>
             <ValidMin></ValidMin>
             <ValidMax></ValidMax>
             <Field>

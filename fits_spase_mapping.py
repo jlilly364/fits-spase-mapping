@@ -189,6 +189,9 @@ class fitsSpaseMapping:
         # Initialize dictionary for all other mapped fields
         mappedFields = {}
 
+        print("Now mapping FITS metadata to SPASE ResourceHeader field")
+        print("-------------------------------------------------------")
+
         for key, tag in resMap.items():
             if key in self.data:
                 j+=1
@@ -246,14 +249,14 @@ class fitsSpaseMapping:
                     # "Pixel Resolution: "{CDELT1} {CUNIT1} "x"+{CDELT2}+{CUNIT2}+"x"+
                     # ...+{CDELTn}+{CUNITn}"\n" for the number of axes given in {NAXIS}
                     elif key == "CDELT1":
-                        pixResolution = f"Pixel Resolution: {value} {self.data["CUNIT1"]}"
+                        self.pixResolution = f"Pixel Resolution: {value} {self.data["CUNIT1"]}"
                         for k in range(1,self.data["NAXIS"]):
-                            pixResolution += f" x {self.data[f"CDELT{k}"]} {self.data[f"CUNIT{k}"]}"
-                        resourceDescriptionParts.append(f"{pixResolution}\n")
+                            self.pixResolution += f" x {self.data[f"CDELT{k}"]} {self.data[f"CUNIT{k}"]}"
+                        resourceDescriptionParts.append(f"{self.pixResolution}\n")
     
                 # Assign proper role depending on FITS fields
                 elif tag == "PersonID":
-                    print(f"PersonID: {value}")
+                    #print(f"PersonID: {value}")
                     if key == "AUTHOR":
                         roles.append("Author")
                     elif key == "ORIGIN":
@@ -351,18 +354,15 @@ class fitsSpaseMapping:
             if resourceElem is None:
                 resourceElem = etree.SubElement(resourceHeader, f"{{{self.NAMESPACE_URI}}}{tag}")
             resourceElem.text = value"""
-
-        ET.indent(self.root, space="    ")
-
-        output_xml = 'mapped_fits_spase_numerical_data.xml'
-        self.tree.write(output_xml, encoding='utf-8', xml_declaration=True,
-        default_namespace=self.NAMESPACE_URI,short_empty_elements=False)
-        print(f"Success! FITS > JSON > XML mapped and saved to {output_xml}")
-
+        
     def fitsParamMap(self,parMap):
         # Initialize storage of Parameter description components
-        paramDescriptionParts = []
+        paramDescriptionParts = [self.pixResolution]
+        print(paramDescriptionParts)
         names = []
+
+        print("\nNow mapping FITS metadata to SPASE Parameter field")
+        print("-------------------------------------------------------")
 
         for key, tag in parMap.items():
             if key in self.data:
@@ -370,38 +370,31 @@ class fitsSpaseMapping:
                 value = self.data[key]
                 print(f"{key} found! ")
         
-        # Constructing components of Parameter description field
-        # elif key == "BNAME":
-        #     paramDescriptionParts.append(value)
+                # Constructing components of Parameter description field
+                # if key == "BNAME":
+                #     paramDescriptionParts.append(value)
 
-        # Include "Pixel Resolution" info in Parameter description
-        paramDescriptionParts.append(f"{self.pixResolution}\n")
-
-        # Include size of array in Parameter description
-        if key == "NAXIS":
-            paramDescriptionParts.append(f"Array size: {self.data["NAXIS1"]}")
-            for k in range(1,value):
-                paramDescriptionParts.append(f"x {self.data[f"NAXIS{j}"]}")
-            paramDescriptionParts.append("\n")
+                # Include size of array in Parameter description
+                if key == "NAXIS":
+                    print("Mapping NAXIS now")
+                    paramDescriptionParts.append(f"Array size: {self.data["NAXIS1"]}".rstrip("."))
+                    for k in range(1,value):
+                        paramDescriptionParts.append(f"x {self.data[f"NAXIS{k}"]}")
 
         if "EXTNAME" in self.data:
             names.append(self.data["EXTNAME"])
-        # else:
-        #     for key, tag in resourceHeaderMap.items():
-        #         print(key,tag)
-        #         names.append(self.data[key])
 
         # Conjoin parts of description
-        parameterDescription = ". ".join(paramDescriptionParts)
-        print(parameterDescription)
+        parameterDescription = " ".join(paramDescriptionParts)
+        print(paramDescriptionParts)
 
         # Find Parameter element
-        parameter = self.root.find('.//spase:Parameter', namespaces=self.namespace)
+        parameter = self.root.find('.//spase:Parameter', namespaces=self.namespaces)
 
         # Find Parameter elements, create them if not found, and map value to field
-        paramNameElem = parameter.find('spase:Name', namespaces=self.namespace)
-        paramDescriptionElem = parameter.find('spase:Description', namespaces=self.namespace)
-        paramUnitElem = parameter.find('spase:Units', namespaces=self.namespace)
+        paramNameElem = parameter.find('spase:Name', namespaces=self.namespaces)
+        paramDescriptionElem = parameter.find('spase:Description', namespaces=self.namespaces)
+        paramUnitElem = parameter.find('spase:Units', namespaces=self.namespaces)
 
         # Should already be in SPASE record because it's required
         if paramNameElem is None:
@@ -416,9 +409,21 @@ class fitsSpaseMapping:
             paramUnitElem = etree.SubElement(parameter, f"{{{self.NAMESPACE_URI}}}Units")
         paramUnitElem.text = self.data["BUNIT"]
 
+    def makeXML(self):
+        # Ensure readable XML formatting
+        ET.indent(self.root, space="    ")
+
+        output_xml = 'mapped_fits_spase_numerical_data.xml'
+        self.tree.write(output_xml, encoding='utf-8', xml_declaration=True,
+        default_namespace=self.NAMESPACE_URI,short_empty_elements=False)
+        print(f"Success! FITS > JSON > XML mapped and saved to {output_xml}")
+
 json_file = "local_json_output/punch_3_CAM_2026_02_20_PUNCH_L3_CAM_20260220001600_v0j.json"
 test = fitsSpaseMapping(json_file)
 test.fitsResourceMap(resourceHeaderMap)
+test.fitsParamMap(paramMap)
+test.makeXML()
+
 
 """# Save modified XML tree to file
 output_xml = 'mapped_fits_spase_numerical_data_v2.xml'
