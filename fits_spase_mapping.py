@@ -15,45 +15,68 @@ import subprocess
 import time
 
 # Not mapped in FITS: ResourceID, AccessInformation>(RepositoryID,AccessURL)
-# Dict of fields that map within NumericalData            
-dataMap = {"OBSTITLE":"ResourceName","TITLE":"ResourceName",
+# Dict of FITS metadata labels that map with ResourceHeader fields        
+resourceHeaderMap = {"OBSTITLE":"ResourceName","TITLE":"ResourceName",
 
-           "RELEASE":"ReleaseDate",
+                    "RELEASE":"ReleaseDate",
 
-           "CAMERA":"Description","CAR_ROT":"Description",
-           "CRS_DESC":"Description","CRS:TYPE":"Description",
-           "CTYPE1":"Description","CTYPE2":"Description",
-           "CUNIT1":"Description","CUNIT2":"Description",
-           "DESCRPTN":"Description","FILTER":"Description",
-           "GRATING":"Description","HISTORY":"Description",
-           "OBJECT":"Description","OBS_DESC":"Description",
-           "OBS_ID":"Description","OBS-MODE":"Description",
-           "TELCONFG":"Description","TEXPOSUR":"Description",
-           "TDESCn":"Description","UCD":"Description",
-           "EXPTIME":"Description","XPOSURE":"Description",
+                    "PROJECT":"Project",
 
-           "AUTHOR":"PersonID","ORIGIN":"PersonID","RELEASEC":"PersonID",
+                    "CAMERA":"Description","CAR_ROT":"Description",
+                    "CRS_DESC":"Description","CRS:TYPE":"Description",
+                    "CDELT1":"Description","CDELT2":"Description",
+                    "CTYPE1":"Description","CTYPE2":"Description",
+                    "CUNIT1":"Description","CUNIT2":"Description",
+                    "DESCRPTN":"Description","FILTER":"Description",
+                    "GRATING":"Description","HISTORY":"Description",
+                    "OBJECT":"Description","OBS_DESC":"Description",
+                    "OBS_ID":"Description","OBS-MODE":"Description",
+                    "TELCONFG":"Description","TEXPOSUR":"Description",
+                    "TDESCn":"Description","UCD":"Description",
+                    "EXPTIME":"Description","XPOSURE":"Description",
 
-           "FITS":"Format",
+                    "AUTHOR":"PersonID","ORIGIN":"PersonID","RELEASEC":"PersonID",
 
-           "BTYPE":"MeasurmentType",
+                    "COMMENT":"URL","DOC_URL":"URL","DOI":"URL","INFO_URL":"URL",
+                    "KEYWDDOC":"URL","REFERENCEC":"URL","SCI_SW":"URL"}
 
-           "BNDCTR":"SpectralRange",
+# Dict of FITS metadata labels that map with other NumericalData fields        
+accessInfoMap = {"LICENSE":"RightsName"}
+providerNameMap = {"HOSTNAME":"ProviderName","ORIGIN":"ProviderName"}
+providerProcessingMap = {"LEVEL":"ProviderProcessingLevel","LVL_NUM":"ProviderProcessingLevel"}
+instrumentIdMap = {"DETECTOR":"InstrumentID","INSTRUME":"InstrumentID","TELESCOP":"InstrumentID"}
+measurementTypeMap = {"BTYPE":"MeasurmentType"}
+temporalDescriptionMap = {"CADENCE":"Cadence","CADMIN":"CadenceMin","CADMAX":"CadenceMax",
+                      "DATE-BEG":"StartDate","DATE-END":"StopDate"} \
+                      # "DATE-OBS":"StartDate","DATE-OBS":"StopDate"
+spectralRangeMap = {"CRS_TYPE":"SpectralRange","UCD":"SpectralRange"}
+obsRegionMap = {"TARGET":"ObservedRegion"}
+spatialCoverageMap = {"WCS_NAME":"CoordinateSystemName","WCS_NAME":"CoordinateSystemRepresentation"}
+keywordMap = {"DATATAGS":"Keyword","KEYVOCAB":"Keyword","KEYWORDS":"Keyword","TARGET":"Keyword"}
 
-           "BNAME":"Description",
-           "CDELT1":"Description","CDELT2":"Description","CDELTn":"Description",
-           "CUNIT1":"Description","CUNIT2":"Description","CUNITn":"Description",
-           "NAXIS":"Description","NAXIS1":"Description","NAXIS2":"Description",
-           "NAXISn":"Description",
+paramMap = {"FILTER":"Name","OBS-MODE":"Name","SCI_SW":"Name","XPOSURE":"Name",
+            
+            "BNAME":"Description","CDELT1":"Description","CDELT2":"Description",
+            "CUNIT1":"Description","CUNIT2":"Description",
+            "NAXIS":"Description","NAXIS1":"Description","NAXIS2":"Description",
 
-           "BUNIT":"Units",
+            "BUNIT":"Units",
 
-           "CADENCE":"Cadence","CADMIN":"CadenceMin","CADMAX":"CadenceMax",
+            "BNDCTR":"SpectralRange",
 
-           "COMMENT":"URL","DOC_URL":"URL","DOI":"URL","INFO_URL":"URL",
-           "KEYWDDOC":"URL","REFERENCEC":"URL","SCI_SW":"URL"
-}
-nameMap = {"FILTER":"Name","OBS-MODE":"Name","XPOSURE":"Name"}
+            "DATAMIN":"ValidMin", "DATAMAX":"ValidMax",
+
+            "WAVEBAND":"SpectralRange","WAVELNTH":"SpectralRange","WAVEUNIT":"SpectralRange",
+            "WAVEMIN":"Low","WAVEMAX":"High"}#,"WAVEUNIT":"Units"}
+
+spaseFields = ["ResourceHeader","AccessInformation","ProviderName",
+               "ProviderProcessing","InstrumentID","MeasurementType",
+               "TemporalDescriptionMap","SpectralRange","ObservedRegion",
+               "SpatialCoverage","Keyword","Parameter"]
+spaseMaps = [resourceHeaderMap,accessInfoMap,providerNameMap,
+             providerProcessingMap,instrumentIdMap,measurementTypeMap,
+             temporalDescriptionMap,spectralRangeMap,obsRegionMap,
+             spatialCoverageMap,keywordMap,paramMap]
 
 # Define the namespace URI
 NAMESPACE_URI = "http://www.spase-group.org/data/schema"
@@ -62,11 +85,11 @@ ET.register_namespace("", NAMESPACE_URI)
 
 # Parse ElementTree and extract root
 parser = etree.XMLParser()
-tree = ET.parse('spase_numerical_data_fits.xml', parser)
+tree = ET.parse('fits_spase_numerical_data.xml', parser)
 #print(tree)
 root = tree.getroot()
 
-# # Iterate through root to see subfields
+# Iterate through root to see subfields
 # for elt in root.iter(tag=etree.Element):
 #     print(elt.tag)
 
@@ -136,186 +159,234 @@ test_file = 'https://umbra.nascom.nasa.gov/punch/3/CAM/2026/02/20/PUNCH_L3_CAM_2
 test = fits_header_to_json(test_file)
 test.write_json(headers_list=test.extract_header())"""
 
-# Open the file and parse its contents
-json_file = "local_json_output/punch_3_CAM_2026_02_20_PUNCH_L3_CAM_20260220001600_v0j.json"
-with open(json_file, 'r', encoding='utf-8') as file:
-    data = json.load(file)
+class fitsSpaseMapping:
 
-# Initialize counters
-i,j = 0,0
+    def __init__(self,json_file):
 
-# Initialize storage of ResourceHeader description components
-resourceDescriptionParts = []
-personIDs = []
-roles = []
-resourceDescriptionEnd = None
+        # Open the file and parse its contents
+        with open(json_file, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+        self.data = data
 
-# Initialize storage of Parameter description components
-paramDescriptionParts = []
-names = []
+        # Initialize string for Pixel Resolution component of description
+        self.pixResolution = ""
 
-# Initialize dictionary for all other mapped fields
-mappedFields = {}
+        # Establish namespace format
+        self.namespaces = {"spase": f"{NAMESPACE_URI}"}
 
-# Loop through FITS metadata keys and associated SPASE xml tags
-for key, tag in dataMap.items():
-    if key in data:
-        i+=1
-        value = data[key]
-        #value = str(data[key]).strip()
-        print(f"{key} found! ")
+    def fitsResourceMap(self,resMap):
+        # Initialize storage of ResourceHeader components
+        resourceDescriptionParts = []
+        personIDs = []
+        roles = []
+        resourceDescriptionEnd = None
 
-        # Look for all ResourceHeader Description components and add if found
-        if tag == "Description":
-            if key == "DESCRPTN":
-                resourceDescriptionParts.insert(0,value)
-            elif key == "CAMERA":
-                resourceDescriptionParts.append(f"CAMERA: {value}")
-            elif key == "CAR_ROT":
-                if isinstance(value,list):
-                    # Possibly has multiple values in list?
-                    resourceDescriptionParts.append(f"Carrington rotations {min(value)} to {max(value)}")
+        # Initialize counters
+        i,j = 0,0
+
+        # Initialize dictionary for all other mapped fields
+        mappedFields = {}
+
+        for key, tag in resMap.items():
+            if key in self.data:
+                j+=1
+                # Extract value of FITS metadata field
+                value = self.data[key]
+                print(f"{key} found! ")
+    
+                # Look for all ResourceHeader Description components and add if found
+                if tag == "Description":
+                    if key == "DESCRPTN":
+                        resourceDescriptionParts.insert(0,f"{value}\n")
+                    elif key == "CAMERA":
+                        resourceDescriptionParts.append(f"CAMERA: {value}\n")
+                    elif key == "CAR_ROT":
+                        if isinstance(value,list):
+                            # Possibly has multiple values in list?
+                            resourceDescriptionParts.append(f"Carrington rotations {min(value)} to {max(value)}\n")
+                        else:
+                            resourceDescriptionParts.append(f"Carrington rotations {value}\n")
+                    elif key == "CRS_DESC":
+                        print("Concatenate unique values into a list")
+                    elif key == "CRS_TYPE":
+                        resourceDescriptionParts.append(f"SpectralRange: {value}\n")
+                    elif key == "CTYPE1":
+                        resourceDescriptionParts.append(f"Coordinate System: {value} ({self.data["CUNIT1"]}) x {self.data["CTYPE2"]} ({self.data["CUNIT2"]})\n")
+                    elif key == "FILTER":
+                        resourceDescriptionParts.append(f"Filter: {value}\n")
+                    elif key == "GRATING":
+                        resourceDescriptionParts.append(f"Grating: {value}\n")
+                    elif key == "OBJECT":
+                        resourceDescriptionParts.append(f"{value}\n")
+                    elif key == "OBS_DESC":
+                        resourceDescriptionParts.append(f"Observation: {value}\n")
+                    elif key == "OBS_ID":
+                        resourceDescriptionParts.append(f"Observation IDs: {value}\n")
+                    elif key == "OBS-MODE":
+                        resourceDescriptionParts.append(f"Observation modes: {value}\n")
+                    elif key == "TDESCn":
+                        print("Look for `CONTINUE` fields following these and append them.")
+                    elif key == "TELCONFG":
+                        resourceDescriptionParts.append(f"Configuration: {value}\n")
+                    elif key == "TEXPOSUR":
+                        resourceDescriptionParts.append(f"Single exposure time: {value}\n")
+                    elif key == "UCD":
+                        print("UCD = Unified Content DescriptorDescribes the physical" \
+                        " quantity in a standard way (e.g., identifier for the concept)" \
+                        "could be mapped into keyword if it had URL/identifier support")
+                    elif key == "EXPTIME":
+                        resourceDescriptionParts.append(f"Exposures: {np.median(value)}\n")
+                    elif key == "XPOSURE":
+                        resourceDescriptionParts.append(f"Exposures: {value}\n")       
+                    elif key == "HISTORY":
+                        resourceDescriptionEnd = value
+
+                    # "Pixel Resolution: "{CDELT1} {CUNIT1} "x"+{CDELT2}+{CUNIT2}+"x"+
+                    # ...+{CDELTn}+{CUNITn}"\n" for the number of axes given in {NAXIS}
+                    elif key == "CDELT1":
+                        pixResolution = f"Pixel Resolution: {value} {self.data["CUNIT1"]}"
+                        for k in range(1,self.data["NAXIS"]):
+                            pixResolution += f" x {self.data[f"CDELT{k}"]} {self.data[f"CUNIT{k}"]}"
+                        resourceDescriptionParts.append(f"{pixResolution}\n")
+    
+                # Assign proper role depending on FITS fields
+                elif tag == "PersonID":
+                    print(f"PersonID: {value}")
+                    if key == "AUTHOR":
+                        roles.append("Author")
+                    elif key == "ORIGIN":
+                        roles.append("HostContact")
+                    elif key == "RELEASEC":
+                        roles.append("DataProducer")
+                    personIDs.append(value)            
+    
+                """# Assign values of fields not mapped to previous fields
                 else:
-                    resourceDescriptionParts.append(f"Carrington rotations {value}")
-            elif key == "CRS_DESC":
-                print("Concatenate unique values into a list")
-            elif key == "CRS_TYPE":
-                resourceDescriptionParts.append(f"SpectralRange: {value}")
-            elif key == "CTYPE1":
-                resourceDescriptionParts.append(f"Coordinate System: {value} ({data["CUNIT1"]}) x {data["CTYPE2"]} ({data["CUNIT2"]})")
-            elif key == "FILTER":
-                resourceDescriptionParts.append(f"Filter: {value}")
-            elif key == "GRATING":
-                resourceDescriptionParts.append(f"Grating: {value}")
-            elif key == "OBJECT":
-                resourceDescriptionParts.append(f"{value}")
-            elif key == "OBS_DESC":
-                resourceDescriptionParts.append(f"Observation: {value}")
-            elif key == "OBS_ID":
-                resourceDescriptionParts.append(f"Observation IDs: {value}")
-            elif key == "OBS-MODE":
-                resourceDescriptionParts.append(f"Observation modes: {value}")
-            elif key == "TDESCn":
-                print("Look for `CONTINUE` fields following these and append them.")
-            elif key == "TELCONFG":
-                resourceDescriptionParts.append(f"Configuration: {value}")
-            elif key == "TEXPOSUR":
-                resourceDescriptionParts.append(f"Single exposure time: {value}")
-            elif key == "UCD":
-                print("UCD = Unified Content DescriptorDescribes the physical" \
-                " quantity in a standard way (e.g., identifier for the concept)" \
-                "could be mapped into keyword if it had URL/identifier support")
-            elif key == "EXPTIME":
-                resourceDescriptionParts.append(f"Exposures: {np.median(value)}")
-            elif key == "XPOSURE":
-                resourceDescriptionParts.append(f"Exposures: {value}")       
-            elif key == "HISTORY":
-                resourceDescriptionEnd = value
+                    mappedFields[tag] = value
+                    print(f"Key:{key} | Tag:{tag} | Value = {value}\n")"""
 
-            # Constructing components of Parameter description field
-            # elif key == "BNAME":
-            #     paramDescriptionParts.append(value)
+        # Assess how many fields are present or not
+        # print(f"Total # of fields: {j+k}")
+        # print(f"Total found: {j}")
+        # print(f"Total not found: {k}")
 
-            # "Pixel Resolution: "{CDELT1} {CUNIT1} "x"+{CDELT2}+{CUNIT2}+"x"+
-            # ...+{CDELTn}+{CUNITn}"\n" for the number of axes given in {NAXIS}
-            elif key == "CDELT1":
-                paramDescriptionParts.append(f"Pixel Resolution: {value} {data["CUNIT1"]}")
-                for j in range(1,data["NAXIS"]):
-                    paramDescriptionParts.append(f"x {data[f"CDELT{j}"]} {data[f"CUNIT{j}"]}")
-                paramDescriptionParts.append("\n")
-            elif key == "NAXIS":
-                paramDescriptionParts.append(f"Array size: {data["NAXIS1"]}")
-                for j in range(1,value):
-                    paramDescriptionParts.append(f"x {data[f"NAXIS{j}"]}")
-                paramDescriptionParts.append("\n")
+        # Conjoin parts of description
+        resourceDescription = ". ".join(resourceDescriptionParts) + f". {resourceDescriptionEnd}."
 
-        # Assign proper role depending on FITS fields
-        elif tag == "PersonID":
-            print(f"PersonID: {value}")
-            if key == "AUTHOR":
-                roles.append("Author")
-            elif key == "ORIGIN":
-                roles.append("HostContact")
-            elif key == "RELEASEC":
-                roles.append("DataProducer")
-            personIDs.append(value)            
+        # Find ResourceHeader fields in ElementTree root
+        resourceHeader = root.find('.//spase:ResourceHeader', namespaces=self.namespaces)
 
-        # Assign values of fields not mapped to previous fields
-        else:
-            mappedFields[tag] = value
-            print(f"Key:{key} | Tag:{tag} | Value = {value}\n")
-    # else:
-    #     j += 1
-    #     print(f"{key} not recognized in FITS-SPASE mapping. Skipping")
+        # Find ResourceHeader description elements or create one if not found 
+        resourceDescriptionElem = resourceHeader.find('spase:Description', namespaces=self.namespaces)
+        if resourceDescriptionElem is None:
+            resourceDescriptionElem = etree.SubElement(resourceHeader, f"{{{NAMESPACE_URI}}}Description")
+        resourceDescriptionElem.text = resourceDescription
 
-if "EXTNAME" in data:
-    names.append(data["EXTNAME"])
-else:
-    for key, tag in nameMap.items():
-        print(key,tag)
-        names.append(data[key])
+        # Create Contact and PersonID elements for all fields that provide one
+        for i, personID in enumerate(personIDs):
+            contactElem = resourceHeader.find('spase:Contact', namespaces=self.namespaces)
+            pidElem = contactElem.find('spase:PersonID', namespaces=self.namespaces)
+            roleElem = contactElem.find('spase:Role', namespaces=self.namespaces)
 
-# Assess how many fields are present or not
-print(f"Total # of fields: {i+j}")
-print(f"Total found: {i}")
-print(f"Total not found: {j}")
+            if contactElem is None:
+                contactElem = etree.SubElement(resourceHeader, f"{{{NAMESPACE_URI}}}Contact")
+                pidElem = etree.SubElement(contactElem, f"{{{NAMESPACE_URI}}}PersonID")
+                roleElem = etree.SubElement(contactElem, namespaces=self.namespaces)
+            pidElem.text = personID
+            roleElem.text = roles[i]
 
-# Conjoin parts of description
-resourceDescription = ". ".join(resourceDescriptionParts) + f". {resourceDescriptionEnd}."
-parameterDescription = ". ".join(paramDescriptionParts)
+        # Map project name
+        fundingElem = resourceHeader.find('spase:Funding', namespaces=self.namespaces)
+        projectElem = fundingElem.find('spase:Project', namespaces=self.namespaces)
+        projectElem.text = self.data["PROJECT"]
 
-# Define namespaces and find fields in ElementTree root
-namespaces = {"spase": f"{NAMESPACE_URI}"}
-resourceHeader = root.find('.//spase:ResourceHeader', namespaces=namespaces)
-parameter = root.find('.//spase:Parameter', namespaces=namespaces)
+        # Map Information URLs
+        infoURLElem = resourceHeader.find('spase:InformationURL', namespaces=self.namespaces)
+        nameElem = infoURLElem.find('spase:Name', namespaces=self.namespaces)
+        nameElem.text = "DOI"
 
-# Find ResourceHeader description elements or create one if not found 
-resourceDescriptionElem = resourceHeader.find('spase:Description', namespaces=namespaces)
-if resourceDescriptionElem is None:
-    resourceDescriptionElem = etree.SubElement(resourceHeader, f"{{{NAMESPACE_URI}}}Description")
-resourceDescriptionElem.text = resourceDescription
+        urlElem = infoURLElem.find('spase:URL', namespaces=self.namespaces)
+        urlElem.text = self.data["DOI"]
 
-# Find Parameter elements, create them if not found, and map value to field
-paramNameElem = parameter.find('spase:Name', namespaces=namespaces)
-paramDescriptionElem = parameter.find('spase:Description', namespaces=namespaces)
-paramUnitElem = parameter.find('spase:Units', namespaces=namespaces)
+        descriptionElem = infoURLElem.find('spase:Description', namespaces=self.namespaces)
+        descriptionElem.text = "DOI"
 
-# Should already be in SPASE record because it's required
-if paramNameElem is None:
-    paramNameElem = etree.SubElement(parameter, f"{{{NAMESPACE_URI}}}Name")
-paramNameElem.text = ". ".join(names)
+        # Find other mapped fields, or create if needed, and insert value
+        for tag, value in mappedFields.items():
+            print(f"Now inserting {tag}: {value}")
+            resourceElem = resourceHeader.find(f'spase:{tag}', namespaces=self.namespaces)
+            if resourceElem is None:
+                resourceElem = etree.SubElement(resourceHeader, f"{{{NAMESPACE_URI}}}{tag}")
+            resourceElem.text = value
 
-if paramDescriptionElem is None:
-    paramDescriptionElem = etree.SubElement(parameter, f"{{{NAMESPACE_URI}}}Description")
-paramDescriptionElem.text = ". ".join(paramDescriptionParts)
+        output_xml = 'mapped_fits_spase_numerical_data_v2.xml'
+        tree.write(output_xml, encoding='utf-8', xml_declaration=True,
+        default_namespace=NAMESPACE_URI,short_empty_elements=False)
+        print(f"Success! FITS > JSON > XML mapped and saved to {output_xml}")
 
-if (paramUnitElem is None) and ("BUNIT" in data):
-    paramUnitElem = etree.SubElement(parameter, f"{{{NAMESPACE_URI}}}Units")
-paramUnitElem.text = data["BUNIT"]
+    def fitsParamMap(self,parMap):
+        # Initialize storage of Parameter description components
+        paramDescriptionParts = []
+        names = []
 
-# Create Contact and PersonID elements for all fields that provide one
-for i, personID in enumerate(personIDs):
-    contactElem = resourceHeader.find('spase:Contact', namespaces=namespaces)
-    pidElem = contactElem.find('spase:PersonID', namespaces=namespaces)
-    roleElem = contactElem.find('spase:Role', namespaces=namespaces)
+        for key, tag in parMap.items():
+            if key in self.data:
+                # Extract value of FITS metadata field
+                value = self.data[key]
+                print(f"{key} found! ")
+        
+        # Constructing components of Parameter description field
+        # elif key == "BNAME":
+        #     paramDescriptionParts.append(value)
 
-    if contactElem is None:
-        contactElem = etree.SubElement(resourceHeader, f"{{{NAMESPACE_URI}}}Contact")
-        pidElem = etree.SubElement(contactElem, f"{{{NAMESPACE_URI}}}PersonID")
-        roleElem = etree.SubElement(contactElem, namespaces=namespaces)
-    pidElem.text = personID
-    roleElem.text = roles[i]
+        # Include "Pixel Resolution" info in Parameter description
+        paramDescriptionParts.append(f"{self.pixResolution}\n")
 
-# Find other mapped fields, or create if needed, and insert value
-for tag, value in mappedFields.items():
-    print(f"Now inserting {tag}: {value}")
-    resourceElem = resourceHeader.find(f'spase:{tag}', namespaces=namespaces)
-    if resourceElem is None:
-        resourceElem = etree.SubElement(resourceHeader, f"{{{NAMESPACE_URI}}}{tag}")
-    resourceElem.text = value
+        # Include size of array in Parameter description
+        if key == "NAXIS":
+            paramDescriptionParts.append(f"Array size: {self.data["NAXIS1"]}")
+            for k in range(1,value):
+                paramDescriptionParts.append(f"x {self.data[f"NAXIS{j}"]}")
+            paramDescriptionParts.append("\n")
 
-# Save modified XML tree to file
+        if "EXTNAME" in self.data:
+            names.append(self.data["EXTNAME"])
+        # else:
+        #     for key, tag in resourceHeaderMap.items():
+        #         print(key,tag)
+        #         names.append(self.data[key])
+
+        # Conjoin parts of description
+        parameterDescription = ". ".join(paramDescriptionParts)
+        print(parameterDescription)
+
+        # Find Parameter element
+        parameter = root.find('.//spase:Parameter', namespaces=self.namespace)
+
+        # Find Parameter elements, create them if not found, and map value to field
+        paramNameElem = parameter.find('spase:Name', namespaces=self.namespace)
+        paramDescriptionElem = parameter.find('spase:Description', namespaces=self.namespace)
+        paramUnitElem = parameter.find('spase:Units', namespaces=self.namespace)
+
+        # Should already be in SPASE record because it's required
+        if paramNameElem is None:
+            paramNameElem = etree.SubElement(parameter, f"{{{NAMESPACE_URI}}}Name")
+        paramNameElem.text = ". ".join(names)
+
+        if paramDescriptionElem is None:
+            paramDescriptionElem = etree.SubElement(parameter, f"{{{NAMESPACE_URI}}}Description")
+        paramDescriptionElem.text = ". ".join(paramDescriptionParts)
+
+        if (paramUnitElem is None) and ("BUNIT" in self.data):
+            paramUnitElem = etree.SubElement(parameter, f"{{{NAMESPACE_URI}}}Units")
+        paramUnitElem.text = self.data["BUNIT"]
+
+json_file = "local_json_output/punch_3_CAM_2026_02_20_PUNCH_L3_CAM_20260220001600_v0j.json"
+test = fitsSpaseMapping(json_file)
+test.fitsResourceMap(resourceHeaderMap)
+
+"""# Save modified XML tree to file
 output_xml = 'mapped_fits_spase_numerical_data_v2.xml'
 tree.write(output_xml, encoding='utf-8', xml_declaration=True,
            default_namespace=NAMESPACE_URI,short_empty_elements=False)
-print(f"Success! FITS > JSON > XML mapped and saved to {output_xml}")
+print(f"Success! FITS > JSON > XML mapped and saved to {output_xml}")"""
