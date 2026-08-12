@@ -286,6 +286,15 @@ class fitsSpaseMapping:
         # Find ResourceHeader fields in ElementTree root
         resourceHeader = self.root.find('.//spase:ResourceHeader', namespaces=self.namespaces)
 
+        try:
+            if self.data["RELEASE"] is not None:
+                releaseDateElem = etree.SubElement(resourceHeader, f"{{{self.NAMESPACE_URI}}}ReleaseDate")
+                releaseDateElem.text = self.data["RELEASE"]
+            else:
+                raise KeyError("No release date found. This is a required field")
+        except KeyError:
+            print("WARNING: No release date found. This is a required SPASE field")
+
         # Find ResourceHeader description elements or create one if not found 
         resourceDescriptionElem = resourceHeader.find('spase:Description', namespaces=self.namespaces)
         if resourceDescriptionElem is None:
@@ -335,17 +344,17 @@ class fitsSpaseMapping:
             urlElem.text = infoURLs[i][1]
             descriptionElem.text = infoURLs[i][0]        
 
-        # Find other mapped fields, or create if needed, and insert value
+        """# Find other mapped fields, or create if needed, and insert value
         for tag, value in mappedFields.items():
             print(f"Now inserting {tag}: {value}")
             resourceElem = resourceHeader.find(f'spase:{tag}', namespaces=self.namespaces)
             if resourceElem is None:
                 resourceElem = etree.SubElement(resourceHeader, f"{{{self.NAMESPACE_URI}}}{tag}")
-            resourceElem.text = value
+            resourceElem.text = value"""
 
         ET.indent(self.root, space="    ")
 
-        output_xml = 'mapped_fits_spase_numerical_data_v2.xml'
+        output_xml = 'mapped_fits_spase_numerical_data.xml'
         self.tree.write(output_xml, encoding='utf-8', xml_declaration=True,
         default_namespace=self.NAMESPACE_URI,short_empty_elements=False)
         print(f"Success! FITS > JSON > XML mapped and saved to {output_xml}")
