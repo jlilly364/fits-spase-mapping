@@ -329,12 +329,11 @@ class fitsSpaseMapping:
             nameElem = etree.SubElement(infoURLElem, f"{{{self.NAMESPACE_URI}}}Name")
             urlElem = etree.SubElement(infoURLElem, f"{{{self.NAMESPACE_URI}}}URL")
             descriptionElem = etree.SubElement(infoURLElem, f"{{{self.NAMESPACE_URI}}}Description")
+
+            # Use collected keys and values to fill InformationURL fields
             nameElem.text = infoURLs[i][0]
             urlElem.text = infoURLs[i][1]
-            descriptionElem.text = infoURLs[i][0]
-
-            print(nameElem.text,urlElem.text,descriptionElem.text)
-        
+            descriptionElem.text = infoURLs[i][0]        
 
         # Find other mapped fields, or create if needed, and insert value
         for tag, value in mappedFields.items():
