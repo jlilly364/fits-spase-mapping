@@ -78,17 +78,6 @@ spaseMaps = [resourceHeaderMap,accessInfoMap,providerNameMap,
              temporalDescriptionMap,spectralRangeMap,obsRegionMap,
              spatialCoverageMap,keywordMap,paramMap]
 
-# Define the namespace URI
-NAMESPACE_URI = "http://www.spase-group.org/data/schema"
-# Register the namespace with a desired prefix
-ET.register_namespace("", NAMESPACE_URI)
-
-# Parse ElementTree and extract root
-parser = etree.XMLParser()
-tree = ET.parse('fits_spase_numerical_data.xml', parser)
-#print(tree)
-root = tree.getroot()
-
 # Iterate through root to see subfields
 # for elt in root.iter(tag=etree.Element):
 #     print(elt.tag)
@@ -168,11 +157,22 @@ class fitsSpaseMapping:
             data = json.load(file)
         self.data = data
 
-        # Initialize string for Pixel Resolution component of description
-        self.pixResolution = ""
+        # Define the namespace URI
+        self.NAMESPACE_URI = "http://www.spase-group.org/data/schema"
+        # Register the namespace with a desired prefix
+        ET.register_namespace("", self.NAMESPACE_URI)
 
         # Establish namespace format
-        self.namespaces = {"spase": f"{NAMESPACE_URI}"}
+        self.namespaces = {"spase": f"{self.NAMESPACE_URI}"}
+
+        # Parse empty SPASE NumericalData record and extract root
+        parser = etree.XMLParser()
+        self.tree = ET.parse('fits_spase_numerical_data.xml', parser)
+        #print(tree)
+        self.root = self.tree.getroot()
+
+        # Initialize string for Pixel Resolution component of description
+        self.pixResolution = ""
 
     def fitsResourceMap(self,resMap):
         # Initialize storage of ResourceHeader components
@@ -274,12 +274,12 @@ class fitsSpaseMapping:
         resourceDescription = ". ".join(resourceDescriptionParts) + f". {resourceDescriptionEnd}."
 
         # Find ResourceHeader fields in ElementTree root
-        resourceHeader = root.find('.//spase:ResourceHeader', namespaces=self.namespaces)
+        resourceHeader = self.root.find('.//spase:ResourceHeader', namespaces=self.namespaces)
 
         # Find ResourceHeader description elements or create one if not found 
         resourceDescriptionElem = resourceHeader.find('spase:Description', namespaces=self.namespaces)
         if resourceDescriptionElem is None:
-            resourceDescriptionElem = etree.SubElement(resourceHeader, f"{{{NAMESPACE_URI}}}Description")
+            resourceDescriptionElem = etree.SubElement(resourceHeader, f"{{{self.NAMESPACE_URI}}}Description")
         resourceDescriptionElem.text = resourceDescription
 
         # Create Contact and PersonID elements for all fields that provide one
@@ -289,8 +289,8 @@ class fitsSpaseMapping:
             roleElem = contactElem.find('spase:Role', namespaces=self.namespaces)
 
             if contactElem is None:
-                contactElem = etree.SubElement(resourceHeader, f"{{{NAMESPACE_URI}}}Contact")
-                pidElem = etree.SubElement(contactElem, f"{{{NAMESPACE_URI}}}PersonID")
+                contactElem = etree.SubElement(resourceHeader, f"{{{self.NAMESPACE_URI}}}Contact")
+                pidElem = etree.SubElement(contactElem, f"{{{self.NAMESPACE_URI}}}PersonID")
                 roleElem = etree.SubElement(contactElem, namespaces=self.namespaces)
             pidElem.text = personID
             roleElem.text = roles[i]
@@ -316,12 +316,12 @@ class fitsSpaseMapping:
             print(f"Now inserting {tag}: {value}")
             resourceElem = resourceHeader.find(f'spase:{tag}', namespaces=self.namespaces)
             if resourceElem is None:
-                resourceElem = etree.SubElement(resourceHeader, f"{{{NAMESPACE_URI}}}{tag}")
+                resourceElem = etree.SubElement(resourceHeader, f"{{{self.NAMESPACE_URI}}}{tag}")
             resourceElem.text = value
 
         output_xml = 'mapped_fits_spase_numerical_data_v2.xml'
         tree.write(output_xml, encoding='utf-8', xml_declaration=True,
-        default_namespace=NAMESPACE_URI,short_empty_elements=False)
+        default_namespace=self.NAMESPACE_URI,short_empty_elements=False)
         print(f"Success! FITS > JSON > XML mapped and saved to {output_xml}")
 
     def fitsParamMap(self,parMap):
@@ -361,7 +361,7 @@ class fitsSpaseMapping:
         print(parameterDescription)
 
         # Find Parameter element
-        parameter = root.find('.//spase:Parameter', namespaces=self.namespace)
+        parameter = self.root.find('.//spase:Parameter', namespaces=self.namespace)
 
         # Find Parameter elements, create them if not found, and map value to field
         paramNameElem = parameter.find('spase:Name', namespaces=self.namespace)
@@ -370,15 +370,15 @@ class fitsSpaseMapping:
 
         # Should already be in SPASE record because it's required
         if paramNameElem is None:
-            paramNameElem = etree.SubElement(parameter, f"{{{NAMESPACE_URI}}}Name")
+            paramNameElem = etree.SubElement(parameter, f"{{{self.NAMESPACE_URI}}}Name")
         paramNameElem.text = ". ".join(names)
 
         if paramDescriptionElem is None:
-            paramDescriptionElem = etree.SubElement(parameter, f"{{{NAMESPACE_URI}}}Description")
+            paramDescriptionElem = etree.SubElement(parameter, f"{{{self.NAMESPACE_URI}}}Description")
         paramDescriptionElem.text = ". ".join(paramDescriptionParts)
 
         if (paramUnitElem is None) and ("BUNIT" in self.data):
-            paramUnitElem = etree.SubElement(parameter, f"{{{NAMESPACE_URI}}}Units")
+            paramUnitElem = etree.SubElement(parameter, f"{{{self.NAMESPACE_URI}}}Units")
         paramUnitElem.text = self.data["BUNIT"]
 
 json_file = "local_json_output/punch_3_CAM_2026_02_20_PUNCH_L3_CAM_20260220001600_v0j.json"
