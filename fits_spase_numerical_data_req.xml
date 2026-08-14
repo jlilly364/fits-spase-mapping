@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Spase xmlns="http://www.spase-group.org/data/schema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <DisplayData>
+    <NumericalData>
         <ResourceID></ResourceID>
         <ResourceHeader>
             <ResourceName></ResourceName>
@@ -19,5 +19,5 @@
             <Format></Format>
         </AccessInformation>
         <MeasurementType></MeasurementType>
-    </DisplayData>
+    </NumericalData>
 </Spase>
