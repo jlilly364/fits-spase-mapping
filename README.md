@@ -1,2 +1,4 @@
 # fits-spase-mapping
-For mapping FITS metadata to SPASE metadata schema
+## Repository for mapping FITS metadata to SPASE metadata schema
+
+###
