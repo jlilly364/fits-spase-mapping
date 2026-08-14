@@ -54,7 +54,7 @@ obsRegionMap = {"TARGET":"ObservedRegion"}
 spatialCoverageMap = {"WCS_NAME":"CoordinateSystemName","WCS_NAME":"CoordinateSystemRepresentation"}
 keywordMap = {"DATATAGS":"Keyword","KEYVOCAB":"Keyword","KEYWORDS":"Keyword","TARGET":"Keyword"}
 
-paramMap = {"FILTER":"Name","OBS-MODE":"Name","SCI_SW":"Name","XPOSURE":"Name",
+paramMap = {"EXTNAME":"Name","FILTER":"Name","OBS-MODE":"Name","SCI_SW":"Name","XPOSURE":"Name",
             
             "BNAME":"Description","CDELT1":"Description","CDELT2":"Description",
             "CUNIT1":"Description","CUNIT2":"Description",
@@ -358,7 +358,6 @@ class fitsSpaseMapping:
     def fitsParamMap(self,parMap):
         # Initialize storage of Parameter description components
         paramDescriptionParts = [self.pixResolution]
-        print(paramDescriptionParts)
         names = []
 
         print("\nNow mapping FITS metadata to SPASE Parameter field")
@@ -366,6 +365,7 @@ class fitsSpaseMapping:
 
         for key, tag in parMap.items():
             if key in self.data:
+                print(key,tag)
                 # Extract value of FITS metadata field
                 value = self.data[key]
                 print(f"{key} found! ")
@@ -376,38 +376,91 @@ class fitsSpaseMapping:
 
                 # Include size of array in Parameter description
                 if key == "NAXIS":
-                    print("Mapping NAXIS now")
+                    #print("\nMapping NAXIS now")
                     paramDescriptionParts.append(f"Array size: {self.data["NAXIS1"]}".rstrip("."))
                     for k in range(1,value):
                         paramDescriptionParts.append(f"x {self.data[f"NAXIS{k}"]}")
 
-        if "EXTNAME" in self.data:
-            names.append(self.data["EXTNAME"])
+                elif key == "EXTNAME":
+                    print("found EXTNAME!")
+                    names.append(value)
+                """elif key == "FILTER":
+                    names.append(value)
+                elif key == "OBS-MODE":
+                    names.append(value)
+                elif key == "XPOSURE":
+                    names.append(value)"""
 
         # Conjoin parts of description
         parameterDescription = " ".join(paramDescriptionParts)
-        print(paramDescriptionParts)
 
         # Find Parameter element
         parameter = self.root.find('.//spase:Parameter', namespaces=self.namespaces)
+        parameters = self.root.findall('.//spase:Parameter', namespaces=self.namespaces)
 
-        # Find Parameter elements, create them if not found, and map value to field
-        paramNameElem = parameter.find('spase:Name', namespaces=self.namespaces)
-        paramDescriptionElem = parameter.find('spase:Description', namespaces=self.namespaces)
-        paramUnitElem = parameter.find('spase:Units', namespaces=self.namespaces)
+        # Wave container within Parameter container
+        for parameter in parameters:
 
-        # Should already be in SPASE record because it's required
-        if paramNameElem is None:
-            paramNameElem = etree.SubElement(parameter, f"{{{self.NAMESPACE_URI}}}Name")
-        paramNameElem.text = ". ".join(names)
+            # Look for Parameter container with Wave subfields
+            waveElem = parameter.find('spase:Wave', namespaces=self.namespaces)
 
-        if paramDescriptionElem is None:
-            paramDescriptionElem = etree.SubElement(parameter, f"{{{self.NAMESPACE_URI}}}Description")
-        paramDescriptionElem.text = ". ".join(paramDescriptionParts)
+            # If there's a Parameter element with the Wave subfield, fill it
+            if waveElem is not None:
 
-        if (paramUnitElem is None) and ("BUNIT" in self.data):
-            paramUnitElem = etree.SubElement(parameter, f"{{{self.NAMESPACE_URI}}}Units")
-        paramUnitElem.text = self.data["BUNIT"]
+                # Find Parameter elements, create them if not found, and map value to field
+                paramNameElem = parameter.find('spase:Name', namespaces=self.namespaces)
+                paramDescriptionElem = parameter.find('spase:Description', namespaces=self.namespaces)
+                paramUnitElem = parameter.find('spase:Units', namespaces=self.namespaces)
+        
+                # Should already be in SPASE record because it's required
+                if paramNameElem is None:
+                    paramNameElem = etree.SubElement(parameter, f"{{{self.NAMESPACE_URI}}}Name")
+                paramNameElem.text = ". ".join(names)
+
+                # Parameter > Description
+                if paramDescriptionElem is None:
+                    paramDescriptionElem = etree.SubElement(parameter, f"{{{self.NAMESPACE_URI}}}Description")
+                paramDescriptionElem.text = parameterDescription
+
+                # Parameter > Units
+                if (paramUnitElem is None) and ("BUNIT" in self.data):
+                    paramUnitElem = etree.SubElement(parameter, f"{{{self.NAMESPACE_URI}}}Units")
+                paramUnitElem.text = self.data["BUNIT"]
+
+                # Parameter > ValidMin & ValidMax
+                validMinElem = parameter.find('spase:ValidMin', namespaces=self.namespaces)
+                print(names)
+                print(validMinElem)
+                validMinElem = self.data["DATAMIN"]
+
+                validMaxElem = parameter.find('spase:ValidMax', namespaces=self.namespaces)
+                validMaxElem = self.data["DATAMAX"]
+
+                # Wavelength range, min, and max
+                waveRangeElem = waveElem.find('spase:WavelengthRange', namespaces=self.namespaces)
+                specRangeElem = waveRangeElem.find('spase:SpectralRange', namespaces=self.namespaces)
+                if specRangeElem is not None:
+                    specRangeElem.text = str(self.data["WAVELNTH"]) + f" {self.data["WAVEUNIT"]}"
+
+                waveMinElem = waveRangeElem.find('spase:Low', namespaces=self.namespaces)
+                waveMaxElem = waveRangeElem.find('spase:High', namespaces=self.namespaces)
+                if "WAVEMIN" in self.data and "WAVEMAX" in self.data:
+                    waveMinElem.text = self.data["WAVEMIN"]
+                    waveMaxElem.text = self.data["WAVEMAX"]
+
+                elif "WAVEMIN" in self.data:
+                    waveMinElem.text = self.data["WAVEMIN"]
+                    waveMaxElem.text = self.data["WAVEMIN"]
+
+                elif "WAVEMAX" in self.data:
+                    waveMinElem.text = self.data["WAVEMAX"]
+                    waveMaxElem.text = self.data["WAVEMAX"]
+                else:
+                    print("WAVEMIN and WAVEMAX not present in FITS file")
+
+                waveUnitElem = waveRangeElem.find('spase:Units', namespaces=self.namespaces)
+                if waveUnitElem is not None:
+                    waveUnitElem.text = self.data["WAVEUNIT"]
 
     def makeXML(self):
         # Ensure readable XML formatting
